@@ -31,7 +31,7 @@
         <parameter key="type" value="exclude attributes"/>
         <parameter key="attribute_filter_type" value="a subset"/>
         <parameter key="select_attribute" value="rank"/>
-        <parameter key="select_subset" value="finals␞firstRound␞rank␞semis␞year␞tmID"/>
+        <parameter key="select_subset" value="attend␞awayL␞awayW␞confL␞confW␞finals␞firstRound␞homeL␞homeW␞rank␞semis␞tmID␞won␞year"/>
         <parameter key="also_apply_to_special_attributes_(id,_label..)" value="false"/>
       </operator>
       <operator activated="true" class="retrieve" compatibility="10.5.000" expanded="true" height="68" name="Retrieve coaches" width="90" x="45" y="442">
