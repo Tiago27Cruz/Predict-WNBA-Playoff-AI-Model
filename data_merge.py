@@ -19,7 +19,7 @@ def count_colleges(teams_df: pd.DataFrame, players_teams_df: pd.DataFrame) -> pd
     print(merged)
     print(list(teams_df))
 
-    return merged.groupby(by=list(teams_df)).agg({"college": pd.Series.mode})
+    return merged.groupby(by=list(teams_df), dropna=False).agg({"college": pd.Series.mode}).reset_index()
 
 #print(count_awards(data_clean.players_teams_df, data_clean.awards_df))
 print(count_colleges(data_clean.teams_df, merge_players(data_clean.players_teams_df, data_clean.players_df)))
