@@ -1,5 +1,4 @@
 import pandas as pd
-from statsmodels.tsa.api import ExponentialSmoothing
 
 def lag_row(df):
     df["playoff"] = df["playoff"].shift(-1)
