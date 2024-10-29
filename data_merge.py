@@ -16,8 +16,6 @@ def count_colleges(teams_df: pd.DataFrame, players_teams_df: pd.DataFrame) -> pd
     players_teams_df = players_teams_df.drop(["GP"], axis=1)
     print(players_teams_df["college"])
     merged = teams_df.merge(players_teams_df, how="inner", on=["tmID", "year"], validate="1:m")
-    print(merged)
-    print(list(teams_df))
 
     return merged.groupby(by=list(teams_df), dropna=False).agg({"college": pd.Series.mode}).reset_index()
 
