@@ -1,4 +1,7 @@
 import pandas as pd
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 
 def lag_row(df):
     df["playoff"] = df["playoff"].shift(-1)
@@ -74,9 +77,32 @@ def prepare_expanding_average(teams_df: pd.DataFrame) -> pd.DataFrame:
     teams_df[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]] = teams_df.sort_values('year').groupby(by=['tmID'])[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]]\
         .expanding().mean().reset_index()[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]]
     
-    print(teams_df)
+    teams_df["playoff"] = teams_df.groupby('tmID')['playoff'].shift(periods=-1)
+
+    return teams_df
+
+def drop_forbidden_columns(teams_df: pd.DataFrame) -> pd.DataFrame:
+    return teams_df.drop(columns=["firstRound", "semis", "finals", "rank"])
+
+def drop_string_columns(teams_df: pd.DataFrame) -> pd.DataFrame:
+    return teams_df.drop(columns=["lgID","tmID","franchID","confID","divID","arena", "name"])
 
 #merge_coaches(pd.read_csv("data/teams.csv"), pd.read_csv("data/coaches.csv"))
-print(prepare_expanding_average(pd.read_csv("data/teams.csv")))
+model_data = drop_forbidden_columns(prepare_expanding_average(pd.read_csv("data/teams.csv")))
+model_data = model_data[model_data["playoff"].notnull()]
+model_data = drop_string_columns(model_data)
+X = model_data.drop('playoff', axis=1)
+y = model_data['playoff'].map({'N':0,'Y':1})
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+
+y_pred = rf.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
 #print(merge_college(pd.read_csv("data/teams.csv"), pd.read_csv("data/players_teams.csv"), pd.read_csv("data/players.csv")))
 
