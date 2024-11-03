@@ -70,8 +70,13 @@ def merge_college(teams_df: pd.DataFrame, players_teams_df: pd.DataFrame, player
 
     return teams_df
 
+def prepare_expanding_average(teams_df: pd.DataFrame) -> pd.DataFrame:
+    teams_df[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]] = teams_df.sort_values('year').groupby(by=['tmID'])[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]]\
+        .expanding().mean().reset_index()[["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts","tmORB","tmDRB","tmTRB","opptmORB","opptmDRB","opptmTRB","won","lost","GP","homeW","homeL","awayW","awayL","confW","confL","min","attend"]]
+    
+    print(teams_df)
 
 #merge_coaches(pd.read_csv("data/teams.csv"), pd.read_csv("data/coaches.csv"))
-
-print(merge_college(pd.read_csv("data/teams.csv"), pd.read_csv("data/players_teams.csv"), pd.read_csv("data/players.csv")))
+print(prepare_expanding_average(pd.read_csv("data/teams.csv")))
+#print(merge_college(pd.read_csv("data/teams.csv"), pd.read_csv("data/players_teams.csv"), pd.read_csv("data/players.csv")))
 
