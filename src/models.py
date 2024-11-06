@@ -35,10 +35,6 @@ def team_values_model_gs():
     - Trains the Random Forest classifier with the best parameters.
     - Evaluates the model on the test set and prints the results.
     """
-
-    #merge_coaches(pd.read_csv("data/teams.csv"), pd.read_csv("data/coaches.csv"))
-
-    #print(merge_college(pd.read_csv("data/teams.csv"), pd.read_csv("data/players_teams.csv"), pd.read_csv("data/players.csv")))
     model_data = prepare_model_data_teams()
     X = model_data.drop('playoff', axis=1)
     y = model_data['playoff'].map({'N':0,'Y':1})
@@ -66,8 +62,45 @@ def team_values_model_gs():
     print("Test set accuracy:", accuracy)
 
 def player_values_model_rf():
-    teams_df = pd.read_csv("data/teams.csv")
-    coaches_df = pd.read_csv("data/coaches.csv")
-    players_df = pd.read_csv("data/players.csv")
-    awards_df = pd.read_csv("data/awards_players.csv")
-    players_teams_df = pd.read_csv("data/players_teams.csv")
+    df = prepare_model_data_players_rf()
+
+    X = df.drop('playoff', axis=1)
+    y = df['playoff'].map({'N':0,'Y':1})
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    rf = RandomForestClassifier()
+    rf.fit(X_train, y_train)
+
+    y_pred = rf.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    print("Accuracy:", accuracy)
+
+def player_values_model_gs():
+    df = prepare_model_data_players_rf()
+
+    X = df.drop('playoff', axis=1)
+    y = df['playoff'].map({'N':0,'Y':1})
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    param_grid = {
+        'n_estimators': [100, 200, 500],
+        'max_depth': [None, 5, 10],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 2],
+        'bootstrap': [True, False]
+    }
+
+    rf = RandomForestClassifier()
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+
+    best_rf = grid_search.best_estimator_
+    y_pred = best_rf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print("Best parameters found:", grid_search.best_params_)
+    print("Best cross-validation score:", grid_search.best_score_)
+    print("Test set accuracy:", accuracy)
+    

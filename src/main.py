@@ -4,7 +4,9 @@ from models import *
 
 def main():
     #team_values_model_gs()
-    team_values_model_rf()
+    #team_values_model_rf()
+    player_values_model_rf()
+    #player_values_model_gs()
 
 if __name__ == "__main__":
     main()

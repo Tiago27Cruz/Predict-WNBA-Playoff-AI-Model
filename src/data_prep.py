@@ -28,3 +28,26 @@ def prepare_model_data_teams() -> pd.DataFrame:
 
     return model_data
 
+def prepare_model_data_players_rf() -> pd.DataFrame:
+    teams_df = pd.read_csv("../data/teams.csv")
+    awards_df = pd.read_csv("../data/awards_players.csv")
+    players_teams_df = pd.read_csv("../data/players_teams.csv")
+
+    teams_df = lag_playoffs(teams_df)
+    teams_df = drop_team_info(teams_df)
+
+    # teams_df = merge_coaches(teams_df, coaches_df)
+
+    #teams_df = merge_college(teams_df, players_teams_df, players_df)
+
+    players_teams_df = merge_awards(players_teams_df, awards_df)
+    players_teams_df = calculate_player_prev_stats(players_teams_df)
+
+    teams_df = calculate_team_players_average(teams_df, players_teams_df)
+
+    teams_df = teams_df.drop(columns="tmID")
+
+    teams_df = teams_df[teams_df["playoff"].notnull()]
+
+    return teams_df
+
