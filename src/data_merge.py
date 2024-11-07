@@ -146,3 +146,27 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
     #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
 
     return teams_df
+
+def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Using exponential moving average, calculate the previous stats of the coaches.
+    Replaces the stats columns with the previous stats.
+    """
+
+    stats = [
+        "won", "lost", "post_wins", "post_losses"
+    ]
+
+    for stat in stats:
+        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+        coaches_df[stat] = (
+            coaches_df
+            .sort_values('year')
+            .groupby(by=['playerID'])[stat]
+            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .reset_index(level=0, drop=True)
+        )
+
+    coaches_df[stats] = coaches_df.groupby('playerID')[stats].shift(periods=1)
+    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+    return coaches_df
