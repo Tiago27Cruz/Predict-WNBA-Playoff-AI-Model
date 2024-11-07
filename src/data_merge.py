@@ -170,3 +170,20 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
     coaches_df[stats] = coaches_df.groupby('playerID')[stats].shift(periods=1)
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return coaches_df
+
+def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate the average of the previous years' coach stats that belong to the team and add it to the team row.
+    """
+    stats = [
+        "won", "lost", "post_wins", "post_losses"
+    ]
+
+    mean_series = coaches_df.groupby(by=["tmID", "year"])[stats].mean()
+    teams_df = teams_df.reset_index(drop=True)
+    teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
+    teams_df = teams_df[teams_df["year"] > 1]
+    teams_df.to_csv("wowe.csv")
+    #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
+
+    return teams_df

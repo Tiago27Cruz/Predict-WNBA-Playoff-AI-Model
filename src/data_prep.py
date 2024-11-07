@@ -32,6 +32,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     teams_df = pd.read_csv("../data/teams.csv")
     awards_df = pd.read_csv("../data/awards_players.csv")
     players_teams_df = pd.read_csv("../data/players_teams.csv")
+    coaches_df = pd.read_csv("../data/coaches.csv")
 
     teams_df = lag_playoffs(teams_df)
     teams_df = drop_team_info(teams_df)
@@ -44,6 +45,8 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     players_teams_df = calculate_player_prev_stats(players_teams_df)
 
     teams_df = calculate_team_players_average(teams_df, players_teams_df)
+    teams_df = calculate_team_coaches_average(teams_df, coaches_df)
+    teams_df.to_csv("wewo.csv")
 
     teams_df = teams_df.drop(columns="tmID")
 
