@@ -104,3 +104,30 @@ def player_values_model_gs():
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
     
+def player_values_model_gs_custom_metric():
+    df = prepare_model_data_players_rf()
+    print(df)
+    
+    for year in range(3, 10):
+        filtered_df = df[df["year"] < year]
+        target_df = df[df["year"] == year]
+        X_train = filtered_df.drop(columns=["playoff"])
+        y_train = filtered_df["playoff"]
+
+        X_test = target_df.drop(columns=["playoff"])
+        y_test = target_df["playoff"]
+
+        rf = RandomForestClassifier()
+        rf.fit(X_train, y_train)
+
+        y_pred = rf.predict_proba(X_test)[:,1]
+        y_pred_sum = sum(y_pred)
+        y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+        
+        error = 0
+        for i in range(len(y_pred)):
+            error += abs(y_pred[i] - list(y_test)[i])
+
+        print(f"predicting year {year}: error was {error}")
+
+

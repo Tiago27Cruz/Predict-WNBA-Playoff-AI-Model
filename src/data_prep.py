@@ -51,6 +51,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     teams_df = teams_df.drop(columns="tmID")
 
     teams_df = teams_df[teams_df["playoff"].notnull()]
+    teams_df["playoff"] = teams_df['playoff'].map({'N':0,'Y':1})
 
     return teams_df
 
