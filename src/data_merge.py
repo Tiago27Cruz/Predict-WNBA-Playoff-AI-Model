@@ -142,7 +142,7 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
-    teams_df.to_csv("wowe.csv")
+    #teams_df.to_csv("wowe.csv")
     #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
 
     return teams_df
@@ -181,9 +181,14 @@ def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFr
 
     mean_series = coaches_df.groupby(by=["tmID", "year"])[stats].mean()
     teams_df = teams_df.reset_index(drop=True)
+
+    
+
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
-    teams_df.to_csv("wowe.csv")
+    #teams_df.to_csv("wowe.csv")
     #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
 
     return teams_df
+
+

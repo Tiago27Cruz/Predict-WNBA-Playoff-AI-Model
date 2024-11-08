@@ -35,3 +35,31 @@ def drop_team_info(teams_df: pd.DataFrame) -> pd.DataFrame:
                 "firstRound", "semis", "finals", "seeded"]
     
     return teams_df.drop(columns=columns)
+
+def transform_stats_in_ratio(teams_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Transforms the stats in the teams_df to ratios based on attempted vs made and claches wr and post-wr.
+    """
+
+    # Coaches
+    teams_df["coach_wr"] = teams_df["won"] / (teams_df["won"] + teams_df["lost"])
+    teams_df["coach_pwr"] = teams_df["post_wins"] / (teams_df["post_wins"] + teams_df["post_losses"]).fillna(0)
+    teams_df.drop(columns=["won", "lost", "post_wins", "post_losses"], inplace=True)
+
+    # Post
+    teams_df["PostthreeRatio"] = teams_df["PostthreeMade"] / teams_df["PostthreeAttempted"]
+    teams_df.drop(columns=["PostthreeMade", "PostthreeAttempted"], inplace=True)
+    teams_df["PostfgRatio"] = teams_df["PostfgMade"] / teams_df["PostfgAttempted"]
+    teams_df.drop(columns=["PostfgMade", "PostfgAttempted"], inplace=True)
+    teams_df["PostftRatio"] = teams_df["PostftMade"] / teams_df["PostftAttempted"]
+    teams_df.drop(columns=["PostftMade", "PostftAttempted"], inplace=True)
+
+    # Regular
+    teams_df["ThreeRatio"] = teams_df["threeMade"] / teams_df["threeAttempted"]
+    teams_df.drop(columns=["threeMade", "threeAttempted"], inplace=True)
+    teams_df["fgRatio"] = teams_df["fgMade"] / teams_df["fgAttempted"]
+    teams_df.drop(columns=["fgMade", "fgAttempted"], inplace=True)
+    teams_df["ftRatio"] = teams_df["ftMade"] / teams_df["ftAttempted"]
+    teams_df.drop(columns=["ftMade", "ftAttempted"], inplace=True)
+
+    return teams_df
