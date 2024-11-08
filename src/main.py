@@ -6,7 +6,7 @@ def main():
     #team_values_model_gs()
     #team_values_model_rf()
     #player_values_model_rf()
-    player_values_model_gs_custom_metric()
+    player_values_model_rf_custom_metric()
 
 if __name__ == "__main__":
     main()

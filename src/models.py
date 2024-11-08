@@ -104,7 +104,7 @@ def player_values_model_gs():
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
     
-def player_values_model_gs_custom_metric():
+def player_values_model_rf_custom_metric():
     df = prepare_model_data_players_rf()
     print(df)
     
