@@ -180,6 +180,8 @@ def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFr
     ]
 
     mean_series = coaches_df.groupby(by=["tmID", "year"])[stats].mean()
+    mean_series = mean_series.rename(columns={stat: f'coach_{stat}' for stat in stats})
+    
     teams_df = teams_df.reset_index(drop=True)
 
     

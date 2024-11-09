@@ -42,8 +42,8 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
 
     teams_df = calculate_team_players_average(teams_df, players_teams_df)
     teams_df = calculate_team_coaches_average(teams_df, coaches_df)
-    teams_df = transform_stats_in_ratio(teams_df)
-    print(teams_df)
+    teams_df = transform_pl_ch_stats_in_ratio(teams_df)
+    #print(teams_df)
     #teams_df.to_csv("wewo.csv")
 
     teams_df = teams_df.drop(columns="tmID")
@@ -52,4 +52,29 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     teams_df["playoff"] = teams_df['playoff'].map({'N':0,'Y':1})
 
     return teams_df
+
+def prepare_global_model():
+    teams_df = pd.read_csv("../data/teams.csv")
+    awards_df = pd.read_csv("../data/awards_players.csv")
+    players_teams_df = pd.read_csv("../data/players_teams.csv")
+    coaches_df = pd.read_csv("../data/coaches.csv")
+
+    teams_df = drop_forbidden_columns(prepare_expanding_average(teams_df))
+    teams_df = teams_df[teams_df["playoff"].notnull()]
+
+    players_teams_df = merge_awards(players_teams_df, awards_df)
+    players_teams_df = calculate_player_prev_stats(players_teams_df)
+
+    teams_df = calculate_team_players_average(teams_df, players_teams_df)
+    teams_df = calculate_team_coaches_average(teams_df, coaches_df)
+    
+    teams_df = transform_pl_ch_stats_in_ratio(teams_df)
+    teams_df = transform_team_stats_in_ratio(teams_df)
+    
+    teams_df = drop_string_columns(teams_df)
+
+    #teams_df.to_csv("wewo.csv")
+
+    return teams_df
+
 

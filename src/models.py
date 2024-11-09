@@ -13,9 +13,9 @@ def team_values_model_rf():
     y = model_data['playoff'].map({'N':0,'Y':1})
 
     # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    rf = RandomForestClassifier()
+    rf = RandomForestClassifier(random_state=42)
     rf.fit(X_train, y_train)
 
     y_pred = rf.predict(X_test)
@@ -40,7 +40,7 @@ def team_values_model_gs():
     y = model_data['playoff'].map({'N':0,'Y':1})
 
     # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     param_grid = {
         'n_estimators': [100, 200, 500],
@@ -65,11 +65,11 @@ def player_values_model_rf():
     df = prepare_model_data_players_rf()
 
     X = df.drop('playoff', axis=1)
-    y = df['playoff'].map({'N':0,'Y':1})
+    y = df['playoff']
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    rf = RandomForestClassifier()
+    rf = RandomForestClassifier(random_state=42)
     rf.fit(X_train, y_train)
 
     y_pred = rf.predict(X_test)
@@ -103,7 +103,7 @@ def player_values_model_gs():
     print("Best parameters found:", grid_search.best_params_)
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
-    
+
 def player_values_model_rf_custom_metric():
     df = prepare_model_data_players_rf()
     print(df)
@@ -130,4 +130,20 @@ def player_values_model_rf_custom_metric():
 
         print(f"predicting year {year}: error was {error}")
 
+def global_model_rf():
+    df = prepare_global_model()
 
+    print(df)
+
+    X = df.drop('playoff', axis=1)
+    y = df['playoff'].map({'N':0,'Y':1})
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    rf = RandomForestClassifier(random_state=42)
+    rf.fit(X_train, y_train)
+
+    y_pred = rf.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    print("Accuracy:", accuracy)
