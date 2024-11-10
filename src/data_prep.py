@@ -34,7 +34,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     players_teams_df = pd.read_csv("../data/players_teams.csv")
     coaches_df = pd.read_csv("../data/coaches.csv")
 
-    teams_df = lag_playoffs(teams_df)
+    #teams_df = lag_playoffs(teams_df)
     teams_df = drop_team_info(teams_df)
 
     players_teams_df = merge_awards(players_teams_df, awards_df)
@@ -44,12 +44,11 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     teams_df = calculate_team_coaches_average(teams_df, coaches_df)
     teams_df = transform_pl_ch_stats_in_ratio(teams_df)
     #print(teams_df)
-    #teams_df.to_csv("wewo.csv")
+    teams_df.to_csv("wewo.csv")
 
     teams_df = teams_df.drop(columns="tmID")
 
-    teams_df = teams_df[teams_df["playoff"].notnull()]
-    teams_df["playoff"] = teams_df['playoff'].map({'N':0,'Y':1})
+    teams_df = teams_df[teams_df["year"] > 1]
 
     return teams_df
 

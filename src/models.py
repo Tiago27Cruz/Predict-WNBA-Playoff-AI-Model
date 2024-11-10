@@ -106,9 +106,9 @@ def player_values_model_gs():
 
 def player_values_model_rf_custom_metric():
     df = prepare_model_data_players_rf()
-    print(df)
+    df['playoff'] = df['playoff'].map({'N':0,'Y':1})
     
-    for year in range(3, 10):
+    for year in range(3, 11):
         filtered_df = df[df["year"] < year]
         target_df = df[df["year"] == year]
         X_train = filtered_df.drop(columns=["playoff"])
