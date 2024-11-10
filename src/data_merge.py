@@ -162,12 +162,12 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
         coaches_df[stat] = (
             coaches_df
             .sort_values('year')
-            .groupby(by=['playerID'])[stat]
+            .groupby(by=['coachID'])[stat]
             .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
             .reset_index(level=0, drop=True)
         )
 
-    coaches_df[stats] = coaches_df.groupby('playerID')[stats].shift(periods=1)
+    coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return coaches_df
 
