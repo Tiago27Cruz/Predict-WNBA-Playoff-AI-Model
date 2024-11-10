@@ -107,6 +107,14 @@ def player_values_model_gs():
 def player_values_model_rf_custom_metric():
     df = prepare_model_data_players_rf()
     df['playoff'] = df['playoff'].map({'N':0,'Y':1})
+
+    param_grid = {
+        'n_estimators': [100, 200, 500],
+        'max_depth': [None, 5, 10],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 2],
+        'bootstrap': [True, False]
+    }
     
     for year in range(3, 11):
         filtered_df = df[df["year"] < year]
@@ -116,11 +124,13 @@ def player_values_model_rf_custom_metric():
 
         X_test = target_df.drop(columns=["playoff"])
         y_test = target_df["playoff"]
-
+        
         rf = RandomForestClassifier()
-        rf.fit(X_train, y_train)
+        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
 
-        y_pred = rf.predict_proba(X_test)[:,1]
+        grid_search.fit(X_train, y_train)
+
+        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
         y_pred_sum = sum(y_pred)
         y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
         
