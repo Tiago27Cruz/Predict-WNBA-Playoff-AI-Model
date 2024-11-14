@@ -144,7 +144,7 @@ def player_values_model_rf_custom_metric():
         #tree.plot_tree(rf, feature_names=list(X_train))
         
         #pyplot.savefig(f"year{year}.png")
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="roc_auc")
+        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
 
         grid_search.fit(X_train, y_train)
 
