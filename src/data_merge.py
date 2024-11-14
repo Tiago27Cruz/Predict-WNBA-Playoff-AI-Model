@@ -138,6 +138,7 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
         "PostthreeAttempted","PostthreeMade","PostDQ" # Post stats
     ]
 
+    players_teams_df = players_teams_df[players_teams_df["minutes"] > 28]
     mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")

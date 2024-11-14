@@ -1,14 +1,23 @@
 from data_prep import *
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 from matplotlib import pyplot
+import numpy as np
 
 ### Model Training Functions ###
+
+def my_custom_loss(ground_truth, predictions):
+    total = sum(ground_truth)
+    total_pred = sum(predictions)
+    predictions = list(map(lambda x: total*x/total_pred, predictions))
+    return np.sum(np.abs(ground_truth - predictions))
+
+loss = make_scorer(my_custom_loss, greater_is_better=False, response_method="predict_proba")
 
 def team_values_model_rf():
     model_data = prepare_model_data_teams()
@@ -120,8 +129,9 @@ def player_values_model_rf_custom_metric():
     }
     
     for year in range(3, 11):
-        filtered_df = df[df["year"] < year]
-        target_df = df[df["year"] == year]
+        filtered_df = df[df["year"] < year].drop(columns=["year"])
+        target_df = df[df["year"] == year].drop(columns=["year"])
+
         X_train = filtered_df.drop(columns=["playoff"])
         y_train = filtered_df["playoff"]
 
@@ -129,16 +139,16 @@ def player_values_model_rf_custom_metric():
         y_test = target_df["playoff"]
         
         rf = RandomForestClassifier()
-        rf.fit(X_train, y_train)
+        #rf.fit(X_train, y_train)
         #pyplot.figure(dpi=1200)
         #tree.plot_tree(rf, feature_names=list(X_train))
         
         #pyplot.savefig(f"year{year}.png")
-        #grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
+        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="roc_auc")
 
-        #grid_search.fit(X_train, y_train)
+        grid_search.fit(X_train, y_train)
 
-        y_pred = rf.predict_proba(X_test)[:,1]
+        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
         y_pred_sum = sum(y_pred)
         y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
         
