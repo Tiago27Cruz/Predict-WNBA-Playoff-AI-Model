@@ -6,8 +6,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
-from matplotlib import pyplot
 import numpy as np
+from sklearn.inspection import permutation_importance
+from matplotlib import pyplot as plt
 
 ### Model Training Functions ###
 
@@ -74,15 +75,40 @@ def team_values_model_gs():
     print("Test set accuracy:", accuracy)
 
 def player_values_model_rf():
-    df = prepare_model_data_players_rf()
+    df = prepare_model_data_players_rf().drop(columns=["year"])
 
     X = df.drop('playoff', axis=1)
     y = df['playoff']
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    
+
     rf = RandomForestClassifier(random_state=42)
     rf.fit(X_train, y_train)
+
+    importance = rf.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in rf.estimators_], axis=0)
+
+    forest_importances = pd.Series(importance, index=X.columns)
+
+    fig, ax = plt.subplots()
+    forest_importances.plot.bar(yerr=std, ax=ax)
+    ax.set_title("Feature importances using MDI")
+    ax.set_ylabel("Mean decrease in impurity")
+    fig.tight_layout()
+
+    result = permutation_importance(
+        rf, X_test, y_test, n_repeats=20, random_state=42, n_jobs=2
+    )
+    forest_importances = pd.Series(result.importances_mean, index=X.columns)
+
+    fig, ax = plt.subplots()
+    forest_importances.plot.bar(yerr=result.importances_std, ax=ax)
+    ax.set_title("Feature importances using permutation on full model")
+    ax.set_ylabel("Mean accuracy decrease")
+    fig.tight_layout()
+    plt.show()
 
     y_pred = rf.predict(X_test)
 
