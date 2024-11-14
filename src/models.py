@@ -4,6 +4,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+from matplotlib import pyplot
 
 ### Model Training Functions ###
 
@@ -126,11 +129,16 @@ def player_values_model_rf_custom_metric():
         y_test = target_df["playoff"]
         
         rf = RandomForestClassifier()
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
+        rf.fit(X_train, y_train)
+        #pyplot.figure(dpi=1200)
+        #tree.plot_tree(rf, feature_names=list(X_train))
+        
+        #pyplot.savefig(f"year{year}.png")
+        #grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1)
 
-        grid_search.fit(X_train, y_train)
+        #grid_search.fit(X_train, y_train)
 
-        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
+        y_pred = rf.predict_proba(X_test)[:,1]
         y_pred_sum = sum(y_pred)
         y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
         
