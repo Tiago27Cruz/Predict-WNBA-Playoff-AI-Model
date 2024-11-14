@@ -44,7 +44,8 @@ def count_awards(row: pd.Series, awards_df: pd.DataFrame) -> pd.Series:
     """
     Count the number of awards a player has won and add it to the row.
     """
-    grouped_df = awards_df.groupby("playerID").size()
+    filtered_awards = awards_df[awards_df["year"] <= row["year"]]
+    grouped_df = filtered_awards.groupby("playerID").size()
     row["Award Count"] = grouped_df.loc[row["playerID"]] if row["playerID"] in grouped_df.index else 0
 
     return row
@@ -138,7 +139,7 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
         "PostthreeAttempted","PostthreeMade","PostDQ" # Post stats
     ]
 
-    players_teams_df = players_teams_df[players_teams_df["minutes"] > 28]
+    players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
     mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
