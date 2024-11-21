@@ -110,6 +110,14 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
     ]
 
     for stat in stats:
+        '''
+        if stat[:4] == "Post":
+            if stat not in ["PostMinutes", "PostGS", "PostGP"]:
+                players_teams_df[stat] = players_teams_df[stat] / players_teams_df["PostMinutes"]
+        else:
+            if stat not in ["minutes", "Award Count", "GP", "GS"]:
+                players_teams_df[stat] = players_teams_df[stat] / players_teams_df["minutes"]
+        '''
         #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
         players_teams_df[stat] = (
             players_teams_df
