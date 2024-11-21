@@ -2,6 +2,7 @@ from data_prep import *
 
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
@@ -130,8 +131,12 @@ def player_values_model_gs():
         'min_samples_leaf': [1, 2],
         'bootstrap': [True, False]
     }
+    grad_grid = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40],
+    }
 
-    rf = RandomForestClassifier()
+    rf = GradientBoostingClassifier()
     grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=3, scoring="roc_auc")
     grid_search.fit(X_train, y_train)
 
@@ -144,6 +149,7 @@ def player_values_model_gs():
 
 def player_values_model_rf_custom_metric():
     df = prepare_model_data_players_rf()
+    #df = prepare_global_model()
     df['playoff'] = df['playoff'].map({'N':0,'Y':1})
 
     param_grid = {
