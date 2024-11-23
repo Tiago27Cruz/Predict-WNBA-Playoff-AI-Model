@@ -4,13 +4,12 @@ from analysis import *
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 import numpy as np
 
-
-
-### Model Training Functions ###
+### Utils for Models ###
 
 def my_custom_loss(ground_truth, predictions):
     total = sum(ground_truth)
@@ -19,6 +18,24 @@ def my_custom_loss(ground_truth, predictions):
     return np.sum(np.abs(ground_truth - predictions))
 
 loss = make_scorer(my_custom_loss, greater_is_better=False, response_method="predict_proba")
+
+def custom_split(df, year):
+    """
+        Split the data into training and test sets based on the year.
+    """
+    filtered_df = df[df["year"] < year].drop(columns=["year"])
+    target_df = df[df["year"] == year].drop(columns=["year"])
+
+    X_train = filtered_df.drop(columns=["playoff"])
+    y_train = filtered_df["playoff"]
+
+    X_test = target_df.drop(columns=["playoff"])
+    y_test = target_df["playoff"]
+        
+    return X_train, y_train, X_test, y_test
+    
+
+### Model Training Functions ###
 
 def team_values_model_rf():
     model_data = prepare_model_data_teams()
@@ -137,14 +154,7 @@ def player_values_model_rf_custom_metric():
     }
     
     for year in range(3, 11):
-        filtered_df = df[df["year"] < year].drop(columns=["year"])
-        target_df = df[df["year"] == year].drop(columns=["year"])
-
-        X_train = filtered_df.drop(columns=["playoff"])
-        y_train = filtered_df["playoff"]
-
-        X_test = target_df.drop(columns=["playoff"])
-        y_test = target_df["playoff"]
+        X_train, y_train, X_test, y_test = custom_split(df, year)
         
         rf = RandomForestClassifier(random_state=42)
         #rf.fit(X_train, y_train)
@@ -157,24 +167,14 @@ def player_values_model_rf_custom_metric():
         grid_search.fit(X_train, y_train)
 
         y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
-        y_pred_sum = sum(y_pred)
-        y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
         
-        error = 0
-        for i in range(len(y_pred)):
-            error += abs(y_pred[i] - list(y_test)[i])
-
-        print(f"predicting year {year}: error was {error}")
+        predict_error(y_pred, y_test, year)
 
         calculate_curves(f"OnlyPlayerGS/year{year}", y_test, y_pred)
         calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
-
-        
-
+ 
 def global_model_rf():
     df = prepare_global_model()
-
-    print(df)
 
     X = df.drop('playoff', axis=1)
     y = df['playoff'].map({'N':0,'Y':1})

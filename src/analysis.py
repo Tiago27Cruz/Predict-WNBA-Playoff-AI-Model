@@ -1,8 +1,10 @@
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc, f1_score
 from sklearn.inspection import permutation_importance
+
 import matplotlib
 from matplotlib import pyplot as plt
 matplotlib.use('Agg')
+
 import numpy as np
 import pandas as pd
 
@@ -68,3 +70,13 @@ def calculate_importances(name, rf, X, X_test, y_test):
     fig.tight_layout()
     plt.savefig("../results/" + name + "_importances2.png")
     plt.close()
+
+def predict_error(y_pred, y_test, year):
+    y_pred_sum = sum(y_pred)
+    y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+    
+    error = 0
+    for i in range(len(y_pred)):
+        error += abs(y_pred[i] - list(y_test)[i])
+
+    print(f"predicting year {year}: error was {error}")
