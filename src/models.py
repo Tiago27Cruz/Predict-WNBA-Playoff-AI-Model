@@ -1,15 +1,14 @@
 from data_prep import *
+from analysis import *
 
 from sklearn.metrics import accuracy_score, make_scorer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 import numpy as np
 from sklearn.inspection import permutation_importance
-from matplotlib import pyplot as plt
+
 
 ### Model Training Functions ###
 
@@ -189,6 +188,10 @@ def player_values_model_rf_custom_metric():
             error += abs(y_pred[i] - list(y_test)[i])
 
         print(f"predicting year {year}: error was {error}")
+
+        calculate_curves(f"Only Player GS year{year}", y_test, y_pred)
+
+        
 
 def global_model_rf():
     df = prepare_global_model()
