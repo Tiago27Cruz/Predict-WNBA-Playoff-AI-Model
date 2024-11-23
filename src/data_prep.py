@@ -84,6 +84,7 @@ def prepare_global_model():
     teams_df = teams_df.drop(columns="tmID")
 
     teams_df = teams_df[teams_df["year"] > 1]
+    teams_df['playoff'] = teams_df['playoff'].map({'N':0,'Y':1})
 
     return teams_df
 

@@ -50,7 +50,7 @@ def calculate_importances(name, rf, X, X_test, y_test):
 
     forest_importances = pd.Series(importance, index=X.columns)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(20, 16))
     forest_importances.plot.bar(yerr=std, ax=ax)
     ax.set_title("Feature importances using MDI")
     ax.set_ylabel("Mean decrease in impurity")
@@ -63,7 +63,7 @@ def calculate_importances(name, rf, X, X_test, y_test):
     )
     forest_importances = pd.Series(result.importances_mean, index=X.columns)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(20, 16))
     forest_importances.plot.bar(yerr=result.importances_std, ax=ax)
     ax.set_title("Feature importances using permutation on full model")
     ax.set_ylabel("Mean accuracy decrease")

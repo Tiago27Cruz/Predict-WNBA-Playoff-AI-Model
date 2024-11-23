@@ -173,18 +173,31 @@ def player_values_model_rf_custom_metric():
         calculate_curves(f"OnlyPlayerGS/year{year}", y_test, y_pred)
         calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
  
-def global_model_rf():
+def global_model_gs():
     df = prepare_global_model()
 
-    X = df.drop('playoff', axis=1)
-    y = df['playoff'].map({'N':0,'Y':1})
+    param_grid = {
+        'n_estimators': [100, 200, 500],
+        'max_depth': [None, 5, 10],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 2],
+        'bootstrap': [True, False]
+    }
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    for year in range(9, 11):
+        # Split data
+        X_train, y_train, X_test, y_test = custom_split(df, year)
+        
+        # Models
+        rf = RandomForestClassifier(random_state=42)
+        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search.fit(X_train, y_train)
 
-    rf = RandomForestClassifier(random_state=42)
-    rf.fit(X_train, y_train)
-
-    y_pred = rf.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Accuracy:", accuracy)
+        # Predictions
+        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
+        
+        # Metrics
+        predict_error(y_pred, y_test, year)
+        calculate_curves(f"GlobalGS/year{year}", y_test, y_pred)
+        calculate_importances(f"GlobalGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+    
