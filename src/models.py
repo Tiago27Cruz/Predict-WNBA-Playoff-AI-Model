@@ -146,7 +146,7 @@ def player_values_model_rf_custom_metric():
         X_test = target_df.drop(columns=["playoff"])
         y_test = target_df["playoff"]
         
-        rf = RandomForestClassifier()
+        rf = RandomForestClassifier(random_state=42)
         #rf.fit(X_train, y_train)
         #pyplot.figure(dpi=1200)
         #tree.plot_tree(rf, feature_names=list(X_train))
@@ -166,7 +166,8 @@ def player_values_model_rf_custom_metric():
 
         print(f"predicting year {year}: error was {error}")
 
-        calculate_curves(f"Only Player GS year{year}", y_test, y_pred)
+        calculate_curves(f"OnlyPlayerGS/year{year}", y_test, y_pred)
+        calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
 
         
 

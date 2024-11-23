@@ -1,6 +1,8 @@
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc, f1_score
 from sklearn.inspection import permutation_importance
+import matplotlib
 from matplotlib import pyplot as plt
+matplotlib.use('Agg')
 import numpy as np
 import pandas as pd
 
@@ -12,9 +14,9 @@ def calculate_curves(name, y_test, y_scores):
     """
     # ROC AUC + F1 score
     roc_auc = roc_auc_score(y_test, y_scores)
-    f1 = f1_score(y_test, y_scores)
+    #f1 = f1_score(y_test, y_scores)
     print("ROC AUC Score:", roc_auc)
-    print("F1 Score:", f1)
+    #print("F1 Score:", f1)
 
     # ROC curve
     fpr, tpr, _ = roc_curve(y_test, y_scores)
@@ -26,6 +28,7 @@ def calculate_curves(name, y_test, y_scores):
     plt.title(name + " ROC Curve")
     plt.legend(loc='lower right')
     plt.savefig("../results/" + name + "_roc_curve.png")
+    plt.close()
 
     # Precision-Recall curve
     precision, recall, _ = precision_recall_curve(y_test, y_scores)
@@ -37,6 +40,7 @@ def calculate_curves(name, y_test, y_scores):
     plt.title(name + " Precision-Recall Curve")
     plt.legend(loc='lower right')
     plt.savefig("../results/" + name + "_pr_curve.png")
+    plt.close()
 
 def calculate_importances(name, rf, X, X_test, y_test):
     importance = rf.feature_importances_
@@ -50,6 +54,7 @@ def calculate_importances(name, rf, X, X_test, y_test):
     ax.set_ylabel("Mean decrease in impurity")
     fig.tight_layout()
     plt.savefig("../results/" + name + "_importances1.png")
+    plt.close()
 
     result = permutation_importance(
         rf, X_test, y_test, n_repeats=20, random_state=42, n_jobs=2
@@ -62,3 +67,4 @@ def calculate_importances(name, rf, X, X_test, y_test):
     ax.set_ylabel("Mean accuracy decrease")
     fig.tight_layout()
     plt.savefig("../results/" + name + "_importances2.png")
+    plt.close()
