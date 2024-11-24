@@ -152,17 +152,24 @@ def player_values_model_rf_custom_metric():
         'min_samples_leaf': [1, 2],
         'bootstrap': [True, False]
     }
-    
+
+    gradient_boosting_params = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40]
+    }
+
+    df = df.drop(columns=["coach_wr"])
+
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
         
-        rf = RandomForestClassifier(random_state=42)
+        rf = GradientBoostingClassifier()
         #rf.fit(X_train, y_train)
         #pyplot.figure(dpi=1200)
         #tree.plot_tree(rf, feature_names=list(X_train))
         
         #pyplot.savefig(f"year{year}.png")
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search = GridSearchCV(estimator=rf, param_grid=gradient_boosting_params, cv=5, n_jobs=-1, scoring="accuracy")
 
         grid_search.fit(X_train, y_train)
 
@@ -171,7 +178,7 @@ def player_values_model_rf_custom_metric():
         predict_error(y_pred, y_test, year)
 
         calculate_curves(f"OnlyPlayerGS/year{year}", y_test, y_pred)
-        calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+        #calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
  
 def global_model_gs():
     df = prepare_global_model()

@@ -204,6 +204,7 @@ def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFr
 
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
+    teams_df["coach_pwr"] = teams_df["coach_pwr"].fillna(0)
     #teams_df.to_csv("wowe.csv")
     #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
 

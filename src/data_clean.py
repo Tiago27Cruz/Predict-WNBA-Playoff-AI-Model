@@ -38,17 +38,17 @@ def drop_team_info(teams_df: pd.DataFrame) -> pd.DataFrame:
 
 def transform_ch_stats_in_ratio(coaches_df: pd.DataFrame) -> pd.DataFrame:
     coaches_df["wr"] = coaches_df["won"] / (coaches_df["won"] + coaches_df["lost"])
-    coaches_df["pwr"] = coaches_df["post_wins"] / (coaches_df["post_wins"] + coaches_df["post_losses"]).fillna(0)
+    coaches_df["pwr"] = (coaches_df["post_wins"] / (coaches_df["post_wins"] + coaches_df["post_losses"])).fillna(0)
     coaches_df.drop(columns=["won", "lost", "post_wins", "post_losses"], inplace=True)
 
     return coaches_df
 
 def transform_pl_stats_in_ratio(players_teams_df: pd.DataFrame) -> pd.DataFrame:
-    players_teams_df["PostthreeRatio"] = players_teams_df["PostthreeMade"] / players_teams_df["PostthreeAttempted"]
+    players_teams_df["PostthreeRatio"] = (players_teams_df["PostthreeMade"] / players_teams_df["PostthreeAttempted"]).fillna(0)
     players_teams_df.drop(columns=["PostthreeMade", "PostthreeAttempted"], inplace=True)
-    players_teams_df["PostfgRatio"] = players_teams_df["PostfgMade"] / players_teams_df["PostfgAttempted"]
+    players_teams_df["PostfgRatio"] = (players_teams_df["PostfgMade"] / players_teams_df["PostfgAttempted"]).fillna(0)
     players_teams_df.drop(columns=["PostfgMade", "PostfgAttempted"], inplace=True)
-    players_teams_df["PostftRatio"] = players_teams_df["PostftMade"] / players_teams_df["PostftAttempted"]
+    players_teams_df["PostftRatio"] = (players_teams_df["PostftMade"] / players_teams_df["PostftAttempted"]).fillna(0)
     players_teams_df.drop(columns=["PostftMade", "PostftAttempted"], inplace=True)
 
     # Regular
