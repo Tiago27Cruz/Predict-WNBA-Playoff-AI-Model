@@ -41,6 +41,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     teams_df = drop_team_info(teams_df)
 
     players_teams_df = merge_awards(players_teams_df, awards_df)
+    players_teams_df = transform_pl_stats_in_ratio(players_teams_df)
     players_teams_df = calculate_player_prev_stats(players_teams_df)
 
     coaches_df = transform_ch_stats_in_ratio(coaches_df)
@@ -48,7 +49,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
 
     teams_df = calculate_team_players_average(teams_df, players_teams_df)
     teams_df = calculate_team_coaches_average(teams_df, coaches_df)
-    teams_df = transform_pl_ch_stats_in_ratio(teams_df)
+    #teams_df = transform_pl_ch_stats_in_ratio(teams_df)
     #print(teams_df)
     teams_df.to_csv("wewo.csv")
 

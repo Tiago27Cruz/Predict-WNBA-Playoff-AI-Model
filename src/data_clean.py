@@ -43,6 +43,24 @@ def transform_ch_stats_in_ratio(coaches_df: pd.DataFrame) -> pd.DataFrame:
 
     return coaches_df
 
+def transform_pl_stats_in_ratio(players_teams_df: pd.DataFrame) -> pd.DataFrame:
+    players_teams_df["PostthreeRatio"] = players_teams_df["PostthreeMade"] / players_teams_df["PostthreeAttempted"]
+    players_teams_df.drop(columns=["PostthreeMade", "PostthreeAttempted"], inplace=True)
+    players_teams_df["PostfgRatio"] = players_teams_df["PostfgMade"] / players_teams_df["PostfgAttempted"]
+    players_teams_df.drop(columns=["PostfgMade", "PostfgAttempted"], inplace=True)
+    players_teams_df["PostftRatio"] = players_teams_df["PostftMade"] / players_teams_df["PostftAttempted"]
+    players_teams_df.drop(columns=["PostftMade", "PostftAttempted"], inplace=True)
+
+    # Regular
+    players_teams_df["ThreeRatio"] = players_teams_df["threeMade"] / players_teams_df["threeAttempted"]
+    players_teams_df.drop(columns=["threeMade", "threeAttempted"], inplace=True)
+    players_teams_df["fgRatio"] = players_teams_df["fgMade"] / players_teams_df["fgAttempted"]
+    players_teams_df.drop(columns=["fgMade", "fgAttempted"], inplace=True)
+    players_teams_df["ftRatio"] = players_teams_df["ftMade"] / players_teams_df["ftAttempted"]
+    players_teams_df.drop(columns=["ftMade", "ftAttempted"], inplace=True)
+
+    return players_teams_df
+
 def transform_pl_ch_stats_in_ratio(teams_df: pd.DataFrame) -> pd.DataFrame:
     """
     Transforms the stats of players and coaches in the teams_df to ratios based on attempted vs made and calculates wr and post-wr.

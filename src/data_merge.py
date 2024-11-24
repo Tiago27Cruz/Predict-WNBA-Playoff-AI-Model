@@ -106,8 +106,11 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
         "PostdRebounds","PostRebounds","PostAssists","PostSteals",
         "PostBlocks","PostTurnovers","PostPF","PostfgAttempted",
         "PostfgMade","PostftAttempted","PostftMade",
-        "PostthreeAttempted","PostthreeMade","PostDQ" # Post stats
+        "PostthreeAttempted","PostthreeMade","PostDQ", # Post stats
+        "PostthreeRatio", "PostfgRatio", "PostftRatio", "ThreeRatio", "fgRatio", "ftRatio"
     ]
+
+    stats = [stat for stat in stats if stat in players_teams_df]
 
     for stat in stats:
         
@@ -144,8 +147,11 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
         "PostdRebounds","PostRebounds","PostAssists","PostSteals",
         "PostBlocks","PostTurnovers","PostPF","PostfgAttempted",
         "PostfgMade","PostftAttempted","PostftMade",
-        "PostthreeAttempted","PostthreeMade","PostDQ" # Post stats
+        "PostthreeAttempted","PostthreeMade","PostDQ", # Post stats
+        "PostthreeRatio", "PostfgRatio", "PostftRatio", "ThreeRatio", "fgRatio", "ftRatio"
     ]
+
+    stats = [stat for stat in stats if stat in players_teams_df]
 
     #players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
     mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
