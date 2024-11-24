@@ -36,15 +36,22 @@ def drop_team_info(teams_df: pd.DataFrame) -> pd.DataFrame:
     
     return teams_df.drop(columns=columns)
 
+def transform_ch_stats_in_ratio(coaches_df: pd.DataFrame) -> pd.DataFrame:
+    coaches_df["wr"] = coaches_df["won"] / (coaches_df["won"] + coaches_df["lost"])
+    coaches_df["pwr"] = coaches_df["post_wins"] / (coaches_df["post_wins"] + coaches_df["post_losses"]).fillna(0)
+    coaches_df.drop(columns=["won", "lost", "post_wins", "post_losses"], inplace=True)
+
+    return coaches_df
+
 def transform_pl_ch_stats_in_ratio(teams_df: pd.DataFrame) -> pd.DataFrame:
     """
     Transforms the stats of players and coaches in the teams_df to ratios based on attempted vs made and calculates wr and post-wr.
     """
 
     # Coaches
-    teams_df["coach_wr"] = teams_df["coach_won"] / (teams_df["coach_won"] + teams_df["coach_lost"])
-    teams_df["coach_pwr"] = teams_df["coach_post_wins"] / (teams_df["coach_post_wins"] + teams_df["coach_post_losses"]).fillna(0)
-    teams_df.drop(columns=["coach_won", "coach_lost", "coach_post_wins", "coach_post_losses"], inplace=True)
+    #teams_df["coach_wr"] = teams_df["coach_won"] / (teams_df["coach_won"] + teams_df["coach_lost"])
+    #teams_df["coach_pwr"] = teams_df["coach_post_wins"] / (teams_df["coach_post_wins"] + teams_df["coach_post_losses"]).fillna(0)
+    #teams_df.drop(columns=["coach_won", "coach_lost", "coach_post_wins", "coach_post_losses"], inplace=True)
 
     # Post
     teams_df["PostthreeRatio"] = teams_df["PostthreeMade"] / teams_df["PostthreeAttempted"]

@@ -110,14 +110,14 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
     ]
 
     for stat in stats:
-        '''
+        
         if stat[:4] == "Post":
             if stat not in ["PostMinutes", "PostGS", "PostGP"]:
-                players_teams_df[stat] = players_teams_df[stat] / players_teams_df["PostMinutes"]
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["PostMinutes"] / players_teams_df["PostGP"]
         else:
             if stat not in ["minutes", "Award Count", "GP", "GS"]:
-                players_teams_df[stat] = players_teams_df[stat] / players_teams_df["minutes"]
-        '''
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["minutes"] / players_teams_df["GP"]
+        
         #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
         players_teams_df[stat] = (
             players_teams_df
@@ -147,7 +147,7 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
         "PostthreeAttempted","PostthreeMade","PostDQ" # Post stats
     ]
 
-    players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
+    #players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
     mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
@@ -164,7 +164,7 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
     """
 
     stats = [
-        "won", "lost", "post_wins", "post_losses"
+        "wr", "pwr"
     ]
 
     for stat in stats:
@@ -186,7 +186,7 @@ def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFr
     Calculate the average of the previous years' coach stats that belong to the team and add it to the team row.
     """
     stats = [
-        "won", "lost", "post_wins", "post_losses"
+        "wr", "pwr"
     ]
 
     mean_series = coaches_df.groupby(by=["tmID", "year"])[stats].mean()

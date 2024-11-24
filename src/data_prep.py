@@ -43,6 +43,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     players_teams_df = merge_awards(players_teams_df, awards_df)
     players_teams_df = calculate_player_prev_stats(players_teams_df)
 
+    coaches_df = transform_ch_stats_in_ratio(coaches_df)
     coaches_df = calculate_coach_prev_stats(coaches_df)
 
     teams_df = calculate_team_players_average(teams_df, players_teams_df)
