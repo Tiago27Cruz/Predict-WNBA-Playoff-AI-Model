@@ -37,6 +37,22 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     players_teams_df = pd.read_csv("../data/players_teams.csv")
     coaches_df = pd.read_csv("../data/coaches.csv")
 
+    team_stats = teams_df[["won","lost","GP","homeW","homeL","awayW","awayL","confW","confL"]]
+    team_stats["wr"] = team_stats["won"] / (team_stats["won"] + team_stats["lost"])
+    team_stats["cwr"] = team_stats["confW"] / (team_stats["confW"] + team_stats["confL"])
+    print(team_stats)
+    teams_df[["wr", "cwr"]] = team_stats[["wr", "cwr"]]
+
+    teams_df[["wr", "cwr"]] = (
+            teams_df
+            .sort_values('year')
+            .groupby(by=['tmID'])[["wr", "cwr"]]
+            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .reset_index(level=0, drop=True)
+        )
+
+    teams_df[["wr", "cwr"]] = teams_df.groupby('tmID')[["wr", "cwr"]].shift(periods=1)
+
     #teams_df = lag_playoffs(teams_df)
     teams_df = drop_team_info(teams_df)
 
