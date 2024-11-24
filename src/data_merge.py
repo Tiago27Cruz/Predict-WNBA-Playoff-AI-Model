@@ -131,6 +131,7 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
         )
 
     players_teams_df[stats] = players_teams_df.groupby('playerID')[stats].shift(periods=1)
+    players_teams_df = players_teams_df.dropna()
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return players_teams_df
 
@@ -184,6 +185,7 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
         )
 
     coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
+    coaches_df = coaches_df.dropna()
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return coaches_df
 
