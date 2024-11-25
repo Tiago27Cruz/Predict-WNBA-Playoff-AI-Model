@@ -6,6 +6,8 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier,
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from sklearn import tree
 import numpy as np
 
@@ -29,8 +31,13 @@ def custom_split(df, year):
     X_train = filtered_df.drop(columns=["playoff"])
     y_train = filtered_df["playoff"]
 
+    pca = PCA(n_components=11)
+    scaler = StandardScaler()
+    X_train = pca.fit_transform(scaler.fit_transform(X_train))
+
     X_test = target_df.drop(columns=["playoff"])
     y_test = target_df["playoff"]
+    X_test = pca.transform(scaler.transform(X_test))
         
     return X_train, y_train, X_test, y_test
     
@@ -181,13 +188,13 @@ def player_values_model_rf_custom_metric():
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
         
-        rf = RandomForestClassifier()
+        rf = GradientBoostingClassifier()
         #rf.fit(X_train, y_train)
         #pyplot.figure(dpi=1200)
         #tree.plot_tree(rf, feature_names=list(X_train))
         
         #pyplot.savefig(f"year{year}.png")
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search = GridSearchCV(estimator=rf, param_grid=gradient_boosting_params, cv=5, n_jobs=-1, scoring="accuracy")
 
         grid_search.fit(X_train, y_train)
 
