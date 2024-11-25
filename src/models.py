@@ -188,13 +188,13 @@ def player_values_model_rf_custom_metric():
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
         
-        rf = GradientBoostingClassifier()
+        rf = GradientBoostingClassifier(random_state=42)
         #rf.fit(X_train, y_train)
         #pyplot.figure(dpi=1200)
         #tree.plot_tree(rf, feature_names=list(X_train))
         
         #pyplot.savefig(f"year{year}.png")
-        grid_search = GridSearchCV(estimator=rf, param_grid=gradient_boosting_params, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search = GridSearchCV(estimator=rf, param_grid=gradient_boosting_params, cv=5, n_jobs=-1, scoring="roc_auc")
 
         grid_search.fit(X_train, y_train)
 
