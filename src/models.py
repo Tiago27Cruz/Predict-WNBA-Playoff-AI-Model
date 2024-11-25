@@ -2,7 +2,7 @@ from data_prep import *
 from analysis import *
 
 from sklearn.metrics import accuracy_score, make_scorer
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -153,6 +153,17 @@ def player_values_model_rf_custom_metric():
         'bootstrap': [True, False]
     }
 
+    ada_param_grid = {
+        'n_estimators': [100, 200, 500],
+        'learning_rate': [0.5,1,2,5],
+        'algorithm': ["SAMME"]
+    }
+
+    hist_param_grid = {
+        'learning_rate': [0.01, 0.1, 1],
+        'max_leaf_nodes': [31, 63, 127]
+    }
+
     gradient_boosting_params = {
         'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
         'max_leaf_nodes': [20,30,40]
@@ -163,7 +174,7 @@ def player_values_model_rf_custom_metric():
     #df["coach_wr"] = df['coach_wr'].fillna(0)
     #df["wr"] = df["wr"].fillna(0)
     #df["cwr"] = df["cwr"].fillna(0)
-    #df = df.fillna(0)
+    df = df.fillna(0)
 
     print(df.isna().any())
 

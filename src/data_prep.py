@@ -37,18 +37,30 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
     players_teams_df = pd.read_csv("../data/players_teams.csv")
     coaches_df = pd.read_csv("../data/coaches.csv")
 
-    team_stats = teams_df[["won","lost","year","tmID"]]
-    team_stats["wr"] = team_stats["won"] / (team_stats["won"] + team_stats["lost"])
+    stats_list = ["o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa","o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to","o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm","d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl","d_to","d_blk","d_pts"]
 
-    team_stats["wr"] = (
+    team_stats = teams_df[stats_list]
+    team_stats[["tmID", "year"]] = teams_df[["tmID", "year"]]
+    team_stats["wr"] = teams_df["won"] / (teams_df["won"] + teams_df["lost"])
+
+    for stat in stats_list:
+        team_stats[stat] = (
             team_stats
             .sort_values('year')
-            .groupby(by=['tmID'])["wr"]
-            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .groupby(by=['tmID'])[stat]
+            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean())
             .reset_index(level=0, drop=True)
         )
+        teams_df[stat] = team_stats.groupby('tmID')[stat].shift(periods=1)
+    team_stats["wr"] = (
+        team_stats
+        .sort_values('year')
+        .groupby(by=['tmID'])["wr"]
+        .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+        .reset_index(level=0, drop=True)
+    )
 
-    #teams_df["wr"] = teams_df.groupby('tmID')["wr"].shift(periods=1)
+    teams_df["wr"] = team_stats.groupby('tmID')["wr"].shift(periods=1)
 
     #teams_df = lag_playoffs(teams_df)
     teams_df = drop_team_info(teams_df)
