@@ -78,4 +78,5 @@ cython_debug/
 *.bak
 *.swp
 
-results/
+results
+
