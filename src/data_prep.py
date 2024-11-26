@@ -48,7 +48,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
             team_stats
             .sort_values('year')
             .groupby(by=['tmID'])[stat]
-            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean())
+            .apply(lambda x: x.ewm(alpha=0.1, adjust=False).mean())
             .reset_index(level=0, drop=True)
         )
         teams_df[stat] = team_stats.groupby('tmID')[stat].shift(periods=1)
@@ -56,7 +56,7 @@ def prepare_model_data_players_rf() -> pd.DataFrame:
         team_stats
         .sort_values('year')
         .groupby(by=['tmID'])["wr"]
-        .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+        .apply(lambda x: x.ewm(alpha=0.1, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
         .reset_index(level=0, drop=True)
     )
 
