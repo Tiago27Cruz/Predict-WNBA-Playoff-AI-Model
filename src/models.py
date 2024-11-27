@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from sklearn import tree
+from sklearn import tree 
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 from sklearn.svm import SVC
@@ -190,7 +190,8 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
 
-        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
+        y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
+        y_pred = y_pred_full[:,1]
         
         errors.append(str(predict_error(y_pred, y_test, year)))
         if name == "decisiontree":
@@ -199,6 +200,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
             plt.close()
 
         calculate_curves(f"{name}/year{year}", y_test, y_pred)
+        plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
 
         if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
 

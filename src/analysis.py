@@ -1,3 +1,4 @@
+from sklearn import metrics
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc, f1_score
 from sklearn.inspection import permutation_importance
 
@@ -7,6 +8,15 @@ matplotlib.use('Agg')
 
 import numpy as np
 import pandas as pd
+
+
+def plot_confusion_matrix(name, y_test, y_scores):
+    confusion_matrix = metrics.confusion_matrix(y_test, np.argmax(y_scores, axis=1))
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [0, 1])
+    cm_display.plot()
+    plt.savefig("../results/" + name + "matrix.png")
+    plt.close()
+
 
 
 def calculate_curves(name, y_test, y_scores):
