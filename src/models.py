@@ -46,80 +46,6 @@ def custom_split(df, year):
     
 
 ### Model Training Functions ###
-
-def team_values_model_rf():
-    model_data = prepare_model_data_teams()
-    X = model_data.drop('playoff', axis=1)
-    y = model_data['playoff'].map({'N':0,'Y':1})
-
-    # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    rf = RandomForestClassifier(random_state=42)
-    rf.fit(X_train, y_train)
-
-    y_pred = rf.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Accuracy:", accuracy)
-
-def team_values_model_gs():
-    """
-    Train a Random Forest model using GridSearchCV to predict playoffs qualification.
-
-    This function performs the following steps:
-    - Loads and preprocesses team data.
-    - Splits the data into training and test sets.
-    - Defines a parameter grid for hyperparameter tuning.
-    - Performs grid search with cross-validation to find the best parameters.
-    - Trains the Random Forest classifier with the best parameters.
-    - Evaluates the model on the test set and prints the results.
-    """
-    model_data = prepare_model_data_teams()
-    X = model_data.drop('playoff', axis=1)
-    y = model_data['playoff'].map({'N':0,'Y':1})
-
-    # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    param_grid = {
-        'n_estimators': [100, 200, 500],
-        'max_depth': [None, 5, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2],
-        'bootstrap': [True, False]
-    }
-
-    rf = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
-    grid_search.fit(X_train, y_train)
-
-    best_rf = grid_search.best_estimator_
-    y_pred = best_rf.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Best parameters found:", grid_search.best_params_)
-    print("Best cross-validation score:", grid_search.best_score_)
-    print("Test set accuracy:", accuracy)
-
-def player_values_model_rf():
-    df = prepare_data().drop(columns=["year"])
-
-    X = df.drop('playoff', axis=1)
-    y = df['playoff']
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    rf = RandomForestClassifier(random_state=42)
-    rf.fit(X_train, y_train)
-
-    calculate_importances("player rf",rf, X, X_test, y_test)
-
-    y_pred = rf.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Accuracy:", accuracy)
-
-def player_values_model_gs():
     df = prepare_data()
 
     X = df.drop('playoff', axis=1)
@@ -150,34 +76,6 @@ def player_values_model_gs():
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
 
-def global_model_gs():
-    df = prepare_global_model()
-
-    param_grid = {
-        'n_estimators': [100, 200, 500],
-        'max_depth': [None, 5, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2],
-        'bootstrap': [True, False]
-    }
-
-    for year in range(9, 11):
-        # Split data
-        X_train, y_train, X_test, y_test = custom_split(df, year)
-        
-        # Models
-        rf = RandomForestClassifier(random_state=42)
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
-        grid_search.fit(X_train, y_train)
-
-        # Predictions
-        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
-        
-        # Metrics
-        predict_error(y_pred, y_test, year)
-        calculate_curves(f"GlobalGS/year{year}", y_test, y_pred)
-        calculate_importances(f"GlobalGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
-
 def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False):
     errors = []
     feature_names = list(df)
@@ -189,6 +87,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
+        print(grid_search.best_estimator_)
 
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
         y_pred = y_pred_full[:,1]
@@ -225,10 +124,6 @@ def model_randomforest():
 
 def model_gradientboost():
     df = prepare_data()
-    hist_param_grid = {
-        'learning_rate': [0.01, 0.1, 1],
-        'max_leaf_nodes': [31, 63, 127]
-    }
     gradient_boosting_params = {
         'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
         'max_leaf_nodes': [20,30,40]
