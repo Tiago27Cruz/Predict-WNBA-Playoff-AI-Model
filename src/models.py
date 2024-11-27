@@ -33,10 +33,15 @@ def custom_split(df, year):
 
     X_train = filtered_df.drop(columns=["playoff"])
     y_train = filtered_df["playoff"]
+    cols = X_train.columns
 
     pca = PCA(n_components=11)
     scaler = StandardScaler()
     X_train = pca.fit_transform(scaler.fit_transform(X_train))
+
+    pcas = pd.DataFrame(pca.components_,columns=cols)
+    sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
+    print(sorted_columns)
 
     X_test = target_df.drop(columns=["playoff"])
     y_test = target_df["playoff"]

@@ -8,13 +8,13 @@ def main():
 
     #player_values_model_gs() # Accuracy: 0.5454545
 
-    model_randomforest()
+    #model_randomforest()
     model_gradientboost()
-    model_svc()
-    model_adaboost()
-    model_knn()
-    model_decisiontree()
-    model_mlp()
+    #model_svc()
+    #model_adaboost()
+    #model_knn()
+    #model_decisiontree()
+    #model_mlp()
 
     #global_model_rf() # Accuracy: 0.5454545
 
