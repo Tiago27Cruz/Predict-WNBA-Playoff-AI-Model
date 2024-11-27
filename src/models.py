@@ -4,11 +4,11 @@ from analysis import *
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn import tree
+from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 from sklearn.svm import SVC
 from sklearn import svm
@@ -177,7 +177,7 @@ def global_model_gs():
         calculate_curves(f"GlobalGS/year{year}", y_test, y_pred)
         calculate_importances(f"GlobalGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
 
-def train(df: pd.DataFrame, estimator, param_grid, name, importances = False):
+def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False):
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
 
@@ -193,8 +193,7 @@ def train(df: pd.DataFrame, estimator, param_grid, name, importances = False):
         if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
  
 
-
-def model_gradientboost():
+def model_randomforest():
     df = prepare_data()
 
     param_grid = {
@@ -204,11 +203,12 @@ def model_gradientboost():
         'min_samples_leaf': [1, 2],
         'bootstrap': [True, False]
     }
-    ada_param_grid = {
-        'n_estimators': [100, 200, 500],
-        'learning_rate': [0.5,1,2,5],
-        'algorithm': ["SAMME"]
-    }
+    estimator = RandomForestClassifier(random_state=42)
+
+    train(df, estimator, param_grid, "randomforest", False)
+
+def model_gradientboost():
+    df = prepare_data()
     hist_param_grid = {
         'learning_rate': [0.01, 0.1, 1],
         'max_leaf_nodes': [31, 63, 127]
@@ -220,8 +220,6 @@ def model_gradientboost():
     estimator = GradientBoostingClassifier(random_state=42)
     train(df, estimator, gradient_boosting_params, "gradientboost", False)
 
-    
-
 def model_svc():
     df = prepare_data()
     param_grid = {'C': [0.1, 1, 10],
@@ -229,3 +227,20 @@ def model_svc():
               'kernel': ['linear', 'rbf', 'poly', 'sigmoid']}
     svc = SVC(probability=True, random_state=42)
     train(df, svc, param_grid, "svc", False)
+
+def model_adaboost():
+    df = prepare_data()
+    param_grid = {
+        'n_estimators': [100, 200, 500],
+        'learning_rate': [0.5,1,2,5],
+        'algorithm': ["SAMME"]
+    }
+    estimator = AdaBoostClassifier(random_state=42)
+    train(df, estimator, param_grid, "adaboost")
+
+def model_knn():
+    df = prepare_data()
+    k_range = list(range(1,27))
+    param_grid = dict(n_neighbors=k_range)
+    estimator = KNeighborsClassifier()
+    train(df, estimator, param_grid, "knn")
