@@ -24,7 +24,7 @@ def my_custom_loss(ground_truth, predictions):
 
 loss = make_scorer(my_custom_loss, greater_is_better=False, response_method="predict_proba")
 
-def custom_split(df, year):
+def custom_split(df, year, usepca):
     """
         Split the data into training and test sets based on the year.
     """
@@ -37,15 +37,17 @@ def custom_split(df, year):
 
     pca = PCA(n_components=11)
     scaler = StandardScaler()
-    X_train = pca.fit_transform(scaler.fit_transform(X_train))
+    if usepca:
+        X_train = pca.fit_transform(scaler.fit_transform(X_train))
 
-    pcas = pd.DataFrame(pca.components_,columns=cols)
-    sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
-    print(sorted_columns)
+        pcas = pd.DataFrame(pca.components_,columns=cols)
+        sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
+        print(sorted_columns)
 
     X_test = target_df.drop(columns=["playoff"])
     y_test = target_df["playoff"]
-    X_test = pca.transform(scaler.transform(X_test))
+    if usepca:
+        X_test = pca.transform(scaler.transform(X_test))
         
     return X_train, y_train, X_test, y_test
     
@@ -81,14 +83,14 @@ def custom_split(df, year):
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
 
-def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False):
+def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False, usepca = True):
     errors = []
     feature_names = list(df)
     feature_names.remove("year")
     feature_names.remove("playoff")
 
     for year in range(3, 11):
-        X_train, y_train, X_test, y_test = custom_split(df, year)
+        X_train, y_train, X_test, y_test = custom_split(df, year, usepca)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
@@ -135,6 +137,15 @@ def model_gradientboost():
     }
     estimator = GradientBoostingClassifier(random_state=42)
     train(df, estimator, gradient_boosting_params, "gradientboost", False)
+
+def model_gradientboost_nopca():
+    df = prepare_data()
+    gradient_boosting_params = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40]
+    }
+    estimator = GradientBoostingClassifier(random_state=42)
+    train(df, estimator, gradient_boosting_params, "gradientboost_noPCA", False, False)
 
 def model_svc():
     df = prepare_data()
