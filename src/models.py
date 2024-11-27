@@ -219,7 +219,7 @@ def model_randomforest():
     }
     estimator = RandomForestClassifier(random_state=42)
 
-    train(df, estimator, param_grid, "randomforest", True)
+    train(df, estimator, param_grid, "randomforest", False)
 
 def model_gradientboost():
     df = prepare_data()
@@ -265,9 +265,9 @@ def model_knn():
 def model_decisiontree():
     df = prepare_data()
     param_grid = { 'criterion':['gini','entropy'],'max_depth': np.arange(3, 15)}
-    estimator = DecisionTreeClassifier()
+    estimator = DecisionTreeClassifier(random_state=42)
     train(df, estimator, param_grid, "decisiontree")
-    
+
 def model_mlp():
     df = prepare_data()
     param_grid = {
