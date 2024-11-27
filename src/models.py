@@ -129,6 +129,15 @@ def model_gradientboost_nopca():
     estimator = GradientBoostingClassifier(random_state=42)
     train(df, estimator, gradient_boosting_params, "gradientboost_noPCA", False, False)
 
+def model_badgb():
+    df = prepare_bad_data()
+    gradient_boosting_params = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40]
+    }
+    estimator = GradientBoostingClassifier(random_state=42)
+    train(df, estimator, gradient_boosting_params, "bad_gradientboost", True)
+
 def model_svc():
     df = prepare_data()
     param_grid = {'C': [0.1, 1, 10],
