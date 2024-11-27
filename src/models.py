@@ -66,30 +66,21 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
-        print(grid_search.best_estimator_)
+        #print(grid_search.best_estimator_)
 
         # Predictions on training set
-        y_train_pred_full = grid_search.best_estimator_.predict_proba(X_train)
-        y_train_pred = y_train_pred_full[:, 1]
+        y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
+        y_pred = y_pred_full[:,1]
+        
+        errors.append(str(predict_error(y_pred, y_test, year)))
 
-        # Predictions on test set
-        y_test_pred_full = grid_search.best_estimator_.predict_proba(X_test)
-        y_test_pred = y_test_pred_full[:, 1]
-
-        # Calculate performance metrics
-        train_accuracy = accuracy_score(y_train, (y_train_pred > 0.5).astype(int))
-        test_accuracy = accuracy_score(y_test, (y_test_pred > 0.5).astype(int))
-
-        print(f"Year: {year}, Train Accuracy: {train_accuracy}, Test Accuracy: {test_accuracy}")
-
-        errors.append(str(predict_error(y_test_pred, y_test, year)))
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
             plt.savefig(f"tree{year}", dpi=300)
             plt.close()
 
-        calculate_curves(f"{name}/year{year}", y_test, y_test_pred)
-        plot_confusion_matrix(f"{name}/year{year}", y_test, y_test_pred_full)
+        calculate_curves(f"{name}/year{year}", y_test, y_pred)
+        plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
         if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
     with open(f"results_{name}.txt", "w") as f:
