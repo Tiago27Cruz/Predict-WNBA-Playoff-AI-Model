@@ -10,6 +10,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn import tree
 import numpy as np
+from sklearn.svm import SVC
+from sklearn import svm
 
 ### Utils for Models ###
 
@@ -99,7 +101,7 @@ def team_values_model_gs():
     print("Test set accuracy:", accuracy)
 
 def player_values_model_rf():
-    df = prepare_model_data_players_rf().drop(columns=["year"])
+    df = prepare_data().drop(columns=["year"])
 
     X = df.drop('playoff', axis=1)
     y = df['playoff']
@@ -117,7 +119,7 @@ def player_values_model_rf():
     print("Accuracy:", accuracy)
 
 def player_values_model_gs():
-    df = prepare_model_data_players_rf()
+    df = prepare_data()
 
     X = df.drop('playoff', axis=1)
     y = df['playoff'].map({'N':0,'Y':1})
@@ -147,64 +149,6 @@ def player_values_model_gs():
     print("Best cross-validation score:", grid_search.best_score_)
     print("Test set accuracy:", accuracy)
 
-def player_values_model_rf_custom_metric():
-    df = prepare_model_data_players_rf()
-    #df = prepare_global_model()
-    df['playoff'] = df['playoff'].map({'N':0,'Y':1})
-
-    param_grid = {
-        'n_estimators': [100, 200, 500],
-        'max_depth': [None, 5, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2],
-        'bootstrap': [True, False]
-    }
-
-    ada_param_grid = {
-        'n_estimators': [100, 200, 500],
-        'learning_rate': [0.5,1,2,5],
-        'algorithm': ["SAMME"]
-    }
-
-    hist_param_grid = {
-        'learning_rate': [0.01, 0.1, 1],
-        'max_leaf_nodes': [31, 63, 127]
-    }
-
-    gradient_boosting_params = {
-        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
-        'max_leaf_nodes': [20,30,40]
-    }
-
-    
-    #df = df.drop(columns=["coach_wr"])
-    #df["coach_wr"] = df['coach_wr'].fillna(0)
-    #df["wr"] = df["wr"].fillna(0)
-    #df["cwr"] = df["cwr"].fillna(0)
-    df = df.fillna(0)
-
-    print(df.isna().any())
-
-    for year in range(3, 11):
-        X_train, y_train, X_test, y_test = custom_split(df, year)
-        
-        rf = GradientBoostingClassifier(random_state=42)
-        #rf.fit(X_train, y_train)
-        #pyplot.figure(dpi=1200)
-        #tree.plot_tree(rf, feature_names=list(X_train))
-        
-        #pyplot.savefig(f"year{year}.png")
-        grid_search = GridSearchCV(estimator=rf, param_grid=gradient_boosting_params, cv=5, n_jobs=-1, scoring="roc_auc")
-
-        grid_search.fit(X_train, y_train)
-
-        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
-        
-        predict_error(y_pred, y_test, year)
-
-        calculate_curves(f"OnlyPlayerGS/year{year}", y_test, y_pred)
-        #calculate_importances(f"OnlyPlayerGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
- 
 def global_model_gs():
     df = prepare_global_model()
 
@@ -232,4 +176,56 @@ def global_model_gs():
         predict_error(y_pred, y_test, year)
         calculate_curves(f"GlobalGS/year{year}", y_test, y_pred)
         calculate_importances(f"GlobalGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+
+def train(df: pd.DataFrame, estimator, param_grid, name, importances = False):
+    for year in range(3, 11):
+        X_train, y_train, X_test, y_test = custom_split(df, year)
+
+        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search.fit(X_train, y_train)
+
+        y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
+        
+        predict_error(y_pred, y_test, year)
+
+        calculate_curves(f"{name}/year{year}", y_test, y_pred)
+
+        if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+ 
+
+
+def model_gradientboost():
+    df = prepare_data()
+
+    param_grid = {
+        'n_estimators': [100, 200, 500],
+        'max_depth': [None, 5, 10],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 2],
+        'bootstrap': [True, False]
+    }
+    ada_param_grid = {
+        'n_estimators': [100, 200, 500],
+        'learning_rate': [0.5,1,2,5],
+        'algorithm': ["SAMME"]
+    }
+    hist_param_grid = {
+        'learning_rate': [0.01, 0.1, 1],
+        'max_leaf_nodes': [31, 63, 127]
+    }
+    gradient_boosting_params = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40]
+    }
+    estimator = GradientBoostingClassifier(random_state=42)
+    train(df, estimator, gradient_boosting_params, "gradientboost", False)
+
     
+
+def model_svc():
+    df = prepare_data()
+    param_grid = {'C': [0.1, 1, 10],
+              'gamma': [1, 0.1, 0.01, 0.001], 
+              'kernel': ['linear', 'rbf', 'poly', 'sigmoid']}
+    svc = SVC(probability=True, random_state=42)
+    train(df, svc, param_grid, "svc", False)
