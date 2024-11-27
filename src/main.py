@@ -13,6 +13,7 @@ def main():
     model_svc()
     model_adaboost()
     model_knn()
+    model_mlp()
 
     #global_model_rf() # Accuracy: 0.5454545
 

@@ -12,6 +12,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 from sklearn.svm import SVC
 from sklearn import svm
+from sklearn.neural_network import MLPClassifier
 
 ### Utils for Models ###
 
@@ -246,7 +247,24 @@ def model_adaboost():
 
 def model_knn():
     df = prepare_data()
-    k_range = list(range(1,27))
-    param_grid = dict(n_neighbors=k_range)
+    param_grid = {
+        'n_neighbors': list(range(1, 27)),
+        'weights': ['uniform', 'distance'],
+        'metric': ['euclidean', 'manhattan', 'minkowski']
+    }
     estimator = KNeighborsClassifier()
     train(df, estimator, param_grid, "knn")
+
+def model_mlp():
+    df = prepare_data()
+    param_grid = {
+        'hidden_layer_sizes': [(50,), (100,), (50, 50), (50, 50, 50), (50,50,50,50,50)],
+        'max_iter': [400, 600, 800],
+        'activation': ['tanh', 'relu'],
+        'solver': ['adam'],
+        'alpha': [ 0.0001, 0.001],
+        'learning_rate': ['constant', 'adaptive'],
+        'learning_rate_init': [0.0001, 0.001],
+    }
+    estimator = MLPClassifier(random_state=42)
+    train(df, estimator, param_grid, "mlp")
