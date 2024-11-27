@@ -47,7 +47,7 @@ def custom_split(df, year):
     y_test = target_df["playoff"]
     X_test = pca.transform(scaler.transform(X_test))
         
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, filtered_df.drop(columns=["playoff"])
     
 
 ### Model Training Functions ###
@@ -88,7 +88,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     feature_names.remove("playoff")
 
     for year in range(3, 11):
-        X_train, y_train, X_test, y_test = custom_split(df, year)
+        X_train, y_train, X_test, y_test, X = custom_split(df, year)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
@@ -106,7 +106,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         calculate_curves(f"{name}/year{year}", y_test, y_pred)
         plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
 
-        if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+        if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
     with open(f"results_{name}.txt", "w") as f:
         for error in errors:
@@ -134,7 +134,7 @@ def model_gradientboost():
         'max_leaf_nodes': [20,30,40]
     }
     estimator = GradientBoostingClassifier(random_state=42)
-    train(df, estimator, gradient_boosting_params, "gradientboost", False)
+    train(df, estimator, gradient_boosting_params, "gradientboost", True)
 
 def model_svc():
     df = prepare_data()

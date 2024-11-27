@@ -56,29 +56,36 @@ def calculate_curves(name, y_test, y_scores):
 
 def calculate_importances(name, rf, X, X_test, y_test):
     importance = rf.feature_importances_
-    std = np.std([tree.feature_importances_ for tree in rf.estimators_], axis=0)
 
-    forest_importances = pd.Series(importance, index=X.columns)
+    # Check if 'estimators_' attribute exists and contains estimators with 'feature_importances_'
+    try:
+        std = np.std([tree.feature_importances_ for tree in rf.estimators_], axis=0)
+    except AttributeError:
+        # Handle the case where estimators do not have 'feature_importances_'
+        std = np.zeros_like(importance)
+
+    forest_importances = pd.Series(importance)
 
     fig, ax = plt.subplots(figsize=(20, 16))
     forest_importances.plot.bar(yerr=std, ax=ax)
-    ax.set_title("Feature importances using MDI")
-    ax.set_ylabel("Mean decrease in impurity")
+    ax.set_title("Feature Importances Using Mean Decrease in Impurity")
+    ax.set_ylabel("Mean Decrease in Impurity")
     fig.tight_layout()
-    plt.savefig("../results/" + name + "_importances1.png")
+    plt.savefig(f"../results/{name}_importances1.png")
     plt.close()
 
+    # Permutation Importance
     result = permutation_importance(
         rf, X_test, y_test, n_repeats=20, random_state=42, n_jobs=2
     )
-    forest_importances = pd.Series(result.importances_mean, index=X.columns)
+    permutation_importances = pd.Series(result.importances_mean)
 
     fig, ax = plt.subplots(figsize=(20, 16))
-    forest_importances.plot.bar(yerr=result.importances_std, ax=ax)
-    ax.set_title("Feature importances using permutation on full model")
-    ax.set_ylabel("Mean accuracy decrease")
+    permutation_importances.plot.bar(yerr=result.importances_std, ax=ax)
+    ax.set_title("Feature Importances Using Permutation on Full Model")
+    ax.set_ylabel("Mean Accuracy Decrease")
     fig.tight_layout()
-    plt.savefig("../results/" + name + "_importances2.png")
+    plt.savefig(f"../results/{name}_importances2.png")
     plt.close()
 
 def predict_error(y_pred, y_test, year):

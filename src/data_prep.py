@@ -80,7 +80,6 @@ def prepare_data(fillna = True) -> pd.DataFrame:
     # Merging
     teams_df = calculate_team_players_average(teams_df, players_teams_df)
     teams_df = calculate_team_coaches_average(teams_df, coaches_df)
-    #teams_df = transform_pl_ch_stats_in_ratio(teams_df)
 
     # Others
     ## Handle useless rows
