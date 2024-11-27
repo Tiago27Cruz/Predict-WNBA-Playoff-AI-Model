@@ -179,6 +179,9 @@ def global_model_gs():
 
 def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False):
     errors = []
+    feature_names = list(df)
+    feature_names.remove("year")
+    feature_names.remove("playoff")
 
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
@@ -189,6 +192,10 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
         
         errors.append(str(predict_error(y_pred, y_test, year)))
+        if name == "decisiontree":
+            tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
+            plt.savefig(f"tree{year}", dpi=300)
+            plt.close()
 
         calculate_curves(f"{name}/year{year}", y_test, y_pred)
 
@@ -211,7 +218,7 @@ def model_randomforest():
     }
     estimator = RandomForestClassifier(random_state=42)
 
-    train(df, estimator, param_grid, "randomforest", False)
+    train(df, estimator, param_grid, "randomforest", True)
 
 def model_gradientboost():
     df = prepare_data()
@@ -250,3 +257,9 @@ def model_knn():
     param_grid = dict(n_neighbors=k_range)
     estimator = KNeighborsClassifier()
     train(df, estimator, param_grid, "knn")
+
+def model_decisiontree():
+    df = prepare_data()
+    param_grid = { 'criterion':['gini','entropy'],'max_depth': np.arange(3, 15)}
+    estimator = DecisionTreeClassifier()
+    train(df, estimator, param_grid, "decisiontree")
