@@ -178,6 +178,8 @@ def global_model_gs():
         calculate_importances(f"GlobalGS/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
 
 def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False):
+    errors = []
+
     for year in range(3, 11):
         X_train, y_train, X_test, y_test = custom_split(df, year)
 
@@ -186,11 +188,15 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         y_pred = grid_search.best_estimator_.predict_proba(X_test)[:,1]
         
-        predict_error(y_pred, y_test, year)
+        errors.append(str(predict_error(y_pred, y_test, year)))
 
         calculate_curves(f"{name}/year{year}", y_test, y_pred)
 
         if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X_train, X_test, y_test)
+
+    with open(f"results_{name}.txt", "w") as f:
+        for error in errors:
+            f.write(f"{error}\n")
  
 
 def model_randomforest():

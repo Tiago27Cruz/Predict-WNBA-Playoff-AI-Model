@@ -80,3 +80,4 @@ def predict_error(y_pred, y_test, year):
         error += abs(y_pred[i] - list(y_test)[i])
 
     print(f"predicting year {year}: error was {error}")
+    return error
