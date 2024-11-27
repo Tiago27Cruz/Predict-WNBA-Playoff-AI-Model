@@ -135,6 +135,42 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return players_teams_df
 
+def bad_calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Using exponential moving average, calculate the previous stats of the players.
+    Replaces the stats columns with the previous stats.
+    """
+
+    stats = [
+        "GP","GS","minutes","points","oRebounds","dRebounds",
+        "rebounds","assists","steals","blocks","turnovers","PF",
+        "fgAttempted","fgMade","ftAttempted","ftMade","threeAttempted",
+        "threeMade","dq", "Award Count", # Non Post stats
+        "PostGP","PostGS","PostMinutes","PostPoints","PostoRebounds",
+        "PostdRebounds","PostRebounds","PostAssists","PostSteals",
+        "PostBlocks","PostTurnovers","PostPF","PostfgAttempted",
+        "PostfgMade","PostftAttempted","PostftMade",
+        "PostthreeAttempted","PostthreeMade","PostDQ", # Post stats
+        "PostthreeRatio", "PostfgRatio", "PostftRatio", "ThreeRatio", "fgRatio", "ftRatio"
+    ]
+
+    stats = [stat for stat in stats if stat in players_teams_df]
+
+    for stat in stats:
+        
+        if stat[:4] == "Post":
+            if stat not in ["PostMinutes", "PostGS", "PostGP"]:
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["PostMinutes"] / players_teams_df["PostGP"]
+        else:
+            if stat not in ["minutes", "Award Count", "GP", "GS"]:
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["minutes"] / players_teams_df["GP"]
+        
+        players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+
+    players_teams_df[stats] = players_teams_df.groupby('playerID')[stats].shift(periods=1)
+
+    return players_teams_df
+
 def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate the average of the previous years' player stats that belong to the team and add it to the team row.
@@ -183,10 +219,27 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
             .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
             .reset_index(level=0, drop=True)
         )
-
+    # TODO: change alpha
     coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
     #coaches_df = coaches_df.dropna()
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+    return coaches_df
+
+def bad_calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Using exponential moving average, calculate the previous stats of the coaches.
+    Replaces the stats columns with the previous stats.
+    """
+
+    stats = [
+        "won","lost","post_wins","post_losses"
+    ]
+
+    for stat in stats:
+        coaches_df[stat] = coaches_df.sort_values('year').groupby(by=['coachID'])[stat].expanding().mean().reset_index()[stat]
+
+    coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
+
     return coaches_df
 
 def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFrame) -> pd.DataFrame:
@@ -212,4 +265,21 @@ def calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFr
 
     return teams_df
 
+def bad_calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate the average of the previous years' coach stats that belong to the team and add it to the team row.
+    """
+    stats = [
+        "won","lost","post_wins","post_losses"
+    ]
 
+    mean_series = coaches_df.groupby(by=["tmID", "year"])[stats].mean()
+    mean_series = mean_series.rename(columns={stat: f'coach_{stat}' for stat in stats})
+    
+    teams_df = teams_df.reset_index(drop=True)
+
+    
+
+    teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
+    teams_df = teams_df[teams_df["year"] > 1]
+    return teams_df

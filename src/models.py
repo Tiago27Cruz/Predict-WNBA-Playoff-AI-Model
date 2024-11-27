@@ -14,6 +14,8 @@ from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 
+from statsmodels.stats.contingency_tables import mcnemar
+
 ### Utils for Models ###
 
 def my_custom_loss(ground_truth, predictions):
@@ -53,36 +55,6 @@ def custom_split(df, year, usepca):
     
 
 ### Model Training Functions ###
-    df = prepare_data()
-
-    X = df.drop('playoff', axis=1)
-    y = df['playoff'].map({'N':0,'Y':1})
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-    param_grid = {
-        'n_estimators': [100, 200, 500],
-        'max_depth': [None, 5, 10],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2],
-        'bootstrap': [True, False]
-    }
-    grad_grid = {
-        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
-        'max_leaf_nodes': [20,30,40],
-    }
-
-    rf = GradientBoostingClassifier()
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=3, scoring="roc_auc")
-    grid_search.fit(X_train, y_train)
-
-    best_rf = grid_search.best_estimator_
-    y_pred = best_rf.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Best parameters found:", grid_search.best_params_)
-    print("Best cross-validation score:", grid_search.best_score_)
-    print("Test set accuracy:", accuracy)
-
 def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False, usepca = True):
     errors = []
     feature_names = list(df)
@@ -94,12 +66,14 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
-        print(grid_search.best_estimator_)
+        #print(grid_search.best_estimator_)
 
+        # Predictions on training set
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
         y_pred = y_pred_full[:,1]
         
         errors.append(str(predict_error(y_pred, y_test, year)))
+
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
             plt.savefig(f"tree{year}", dpi=300)
@@ -107,7 +81,6 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         calculate_curves(f"{name}/year{year}", y_test, y_pred)
         plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
-
         if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
     with open(f"results_{name}.txt", "w") as f:
@@ -146,6 +119,15 @@ def model_gradientboost_nopca():
     }
     estimator = GradientBoostingClassifier(random_state=42)
     train(df, estimator, gradient_boosting_params, "gradientboost_noPCA", False, False)
+
+def model_badgb():
+    df = prepare_bad_data()
+    gradient_boosting_params = {
+        'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
+        'max_leaf_nodes': [20,30,40]
+    }
+    estimator = GradientBoostingClassifier(random_state=42)
+    train(df, estimator, gradient_boosting_params, "bad_gradientboost", True)
 
 def model_svc():
     df = prepare_data()
