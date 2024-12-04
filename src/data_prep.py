@@ -96,6 +96,53 @@ def prepare_data(fillna = True) -> pd.DataFrame:
 
     return teams_df
 
+def prepare_data_y11(fillna = True) -> pd.DataFrame:
+    teams_df = pd.read_csv("../data/teams.csv")
+    awards_df = pd.read_csv("../data/awards_players.csv")
+    players_teams_df = pd.read_csv("../data/players_teams.csv")
+    coaches_df = pd.read_csv("../data/coaches.csv")
+
+    teams_y11 = pd.read_csv("../data/y11/teams.csv")
+    players_teams_y11 = pd.read_csv("../data/y11/teams.csv")
+    coaches_y11 = pd.read_csv("../data/y11/coaches.csv")
+    teams_df.to_csv("woo1.csv")
+    teams_df = pd.concat([teams_df, teams_y11], ignore_index=True)
+    teams_df.to_csv("woo2.csv")
+    players_teams_df = pd.concat([players_teams_df, players_teams_y11], ignore_index=True)
+    coaches_df = pd.concat([coaches_df, coaches_y11], ignore_index=True)
+
+    # Handling Teams csv values
+    teams_df = calculate_ewm(teams_df)
+    teams_df = drop_team_info(teams_df)
+
+    # Handling Players + Awards csv values
+    players_teams_df = merge_awards(players_teams_df, awards_df)
+    players_teams_df = transform_pl_stats_in_ratio(players_teams_df)
+    players_teams_df = calculate_player_prev_stats(players_teams_df)
+
+    # Handling Coaches csv values
+    coaches_df = transform_ch_stats_in_ratio(coaches_df)
+    coaches_df = calculate_coach_prev_stats(coaches_df)
+    
+    # Merging
+    teams_df = calculate_team_players_average(teams_df, players_teams_df)
+    teams_df = calculate_team_coaches_average(teams_df, coaches_df)
+
+    # Others
+    ## Handle useless rows
+    teams_df = teams_df[teams_df["year"] > 1]
+    ## Handle N/A Values if wanted
+    ## TODO: Some other method of leading with N/A might give us better results (???) or only in some fields
+    if (fillna): teams_df = teams_df.fillna(0)
+
+    teams_df.to_csv("wewo.csv", index=False)
+
+    ## Needed for models
+    teams_df = teams_df.drop(columns="tmID")
+    teams_df['playoff'] = teams_df['playoff'].map({'N':0,'Y':1})
+
+    return teams_df
+
 def prepare_bad_data():
     teams_df = pd.read_csv("../data/teams.csv")
     awards_df = pd.read_csv("../data/awards_players.csv")

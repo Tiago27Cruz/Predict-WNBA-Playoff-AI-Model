@@ -12,7 +12,7 @@ def main():
     
     model_gradientboost()
     #model_gradientboost_nopca()
-    model_badgb()
+    #model_badgb()
     #model_svc()
     #model_adaboost()
     #model_knn()
