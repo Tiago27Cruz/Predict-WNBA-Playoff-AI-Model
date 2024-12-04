@@ -19,6 +19,9 @@ def main():
     #model_decisiontree()
     #model_mlp()
 
+    prepare_data()
+    prepare_data_y11()
+
     #global_model_rf() # Accuracy: 0.5454545
 
 if __name__ == "__main__":

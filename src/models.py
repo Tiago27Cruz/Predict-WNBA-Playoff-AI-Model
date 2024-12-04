@@ -59,7 +59,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     feature_names.remove("year")
     feature_names.remove("playoff")
 
-    for year in range(3, 12):
+    for year in range(3, 11):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
@@ -101,7 +101,7 @@ def model_randomforest():
     train(df, estimator, param_grid, "randomforest", False)
 
 def model_gradientboost():
-    df = prepare_data()
+    df = prepare_data_y11()
     gradient_boosting_params = {
         'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
         'max_leaf_nodes': [20,30,40]
