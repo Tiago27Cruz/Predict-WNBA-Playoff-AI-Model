@@ -14,8 +14,6 @@ from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 
-from statsmodels.stats.contingency_tables import mcnemar
-
 ### Utils for Models ###
 
 def my_custom_loss(ground_truth, predictions):
