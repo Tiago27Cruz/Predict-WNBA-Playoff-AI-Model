@@ -59,7 +59,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     feature_names.remove("year")
     feature_names.remove("playoff")
 
-    for year in range(3, 11):
+    for year in range(3, 12):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
