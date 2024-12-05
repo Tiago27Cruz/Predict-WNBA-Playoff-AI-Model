@@ -1,6 +1,7 @@
 from sklearn import metrics
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc, f1_score
 from sklearn.inspection import permutation_importance
+from scipy.special import softmax
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -89,8 +90,9 @@ def calculate_importances(name, rf, X, X_test, y_test):
     plt.close()
 
 def predict_error(y_pred, y_test, year):
-    y_pred_sum = sum(y_pred)
-    y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+    #y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+    y_pred = softmax(y_pred)
+    y_pred = [8*y for y in y_pred]
     
     error = 0
     for i in range(len(y_pred)):

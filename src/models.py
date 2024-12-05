@@ -1,3 +1,4 @@
+from xgboost import XGBClassifier
 from data_prep import *
 from analysis import *
 
@@ -87,7 +88,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
  
 
 def model_randomforest():
-    df = prepare_data()
+    df = prepare_data_y11()
 
     param_grid = {
         'n_estimators': [100, 200, 500],
@@ -99,6 +100,16 @@ def model_randomforest():
     estimator = RandomForestClassifier(random_state=42)
 
     train(df, estimator, param_grid, "randomforest", False)
+
+def model_xgboost():
+    df = prepare_data_y11()
+    params = {
+    'max_depth': [3, 5, 7],
+    'learning_rate': [0.1, 0.01, 0.001],
+    'subsample': [0.5, 0.7, 1]
+}
+    estimator = XGBClassifier()
+    train(df, estimator, params, "xgboost", False)
 
 def model_gradientboost():
     df = prepare_data_y11()
@@ -128,15 +139,15 @@ def model_badgb():
     train(df, estimator, gradient_boosting_params, "bad_gradientboost", True)
 
 def model_svc():
-    df = prepare_data()
+    df = prepare_data_y11()
     param_grid = {'C': [0.1, 1, 10],
-              'gamma': [1, 0.1, 0.01, 0.001], 
+              'gamma': [1, 0.1, 0.01, 0.001, 'scale'], 
               'kernel': ['linear', 'rbf', 'poly', 'sigmoid']}
     svc = SVC(probability=True, random_state=42)
     train(df, svc, param_grid, "svc", False)
 
 def model_adaboost():
-    df = prepare_data()
+    df = prepare_data_y11()
     param_grid = {
         'n_estimators': [100, 200, 500],
         'learning_rate': [0.5,1,2,5],
@@ -156,16 +167,16 @@ def model_knn():
     train(df, estimator, param_grid, "knn")
 
 def model_decisiontree():
-    df = prepare_data()
+    df = prepare_data_y11()
     param_grid = { 'criterion':['gini','entropy'],'max_depth': np.arange(3, 15)}
     estimator = DecisionTreeClassifier(random_state=42)
     train(df, estimator, param_grid, "decisiontree")
 
 def model_mlp():
-    df = prepare_data()
+    df = prepare_data_y11()
     param_grid = {
-        'hidden_layer_sizes': [(50,), (100,), (50, 50), (50, 50, 50), (50,50,50,50,50)],
-        'max_iter': [400, 600, 800],
+        'hidden_layer_sizes': [(50, 50, 50), (50,50,50,50,50)],
+        'max_iter': [800, 1000],
         'activation': ['tanh', 'relu'],
         'solver': ['adam'],
         'alpha': [ 0.0001, 0.001],
