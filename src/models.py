@@ -14,6 +14,7 @@ import numpy as np
 from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
+from itertools import product
 
 ### Utils for Models ###
 
@@ -43,7 +44,7 @@ def custom_split(df, year, usepca):
 
         pcas = pd.DataFrame(pca.components_,columns=cols)
         sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
-        print(sorted_columns)
+        #print(sorted_columns)
 
     X_test = target_df.drop(columns=["playoff"])
     y_test = target_df["playoff"]
@@ -56,6 +57,7 @@ def custom_split(df, year, usepca):
 ### Model Training Functions ###
 def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importances = False, usepca = True):
     errors = []
+    error = 0
     feature_names = list(df)
     feature_names.remove("year")
     feature_names.remove("playoff")
@@ -71,21 +73,24 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
         y_pred = y_pred_full[:,1]
         
-        errors.append(str(predict_error(y_pred, y_test, year)))
+        #errors.append(str(predict_error(y_pred, y_test, year)))
+
+        error = predict_error(y_pred, y_test, year)
 
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
             plt.savefig(f"tree{year}", dpi=300)
             plt.close()
 
-        calculate_curves(f"{name}/year{year}", y_test, y_pred)
-        plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
-        if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
+        #calculate_curves(f"{name}/year{year}", y_test, y_pred)
+        #plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
+        #if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
-    with open(f"results_{name}.txt", "w") as f:
-        for error in errors:
-            f.write(f"{error}\n")
- 
+    #with open(f"results_{name}.txt", "w") as f:
+    #    for error in errors:
+    #        f.write(f"{error}\n")
+    return error
+
 
 def model_randomforest():
     df = prepare_data_y11()
@@ -102,14 +107,28 @@ def model_randomforest():
     train(df, estimator, param_grid, "randomforest", False)
 
 def model_xgboost():
-    df = prepare_data_y11()
+    alpha_values = np.linspace(0.25, 0.75, num=2)  # Generate 11 values between 0 and 1
+    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
+
+    #df = prepare_data_y11()
     params = {
-    'max_depth': [3, 5, 7],
-    'learning_rate': [0.1, 0.01, 0.001],
-    'subsample': [0.5, 0.7, 1]
-}
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.1, 0.01, 0.001],
+        'subsample': [0.5, 0.7, 1]
+    }
     estimator = XGBClassifier()
-    train(df, estimator, params, "xgboost", False)
+    min_error = float('inf')
+    best_alphas = None
+    for alphas in alpha_combinations:
+        alpha1, alpha2, alpha3, alpha4 = alphas
+        df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4.item())
+        print(f"Testing with alphas: {alphas}")
+        error = train(df, estimator, params, f"xgboost_alpha_{alpha1.item()}_{alpha2.item()}_{alpha3.item()}_{alpha4.item()}", False)
+        if error < min_error:
+            min_error = error
+            best_alphas = alphas
+            print (f"New best error: {min_error} with alphas: {best_alphas}")
+    print(f"Best alphas: {best_alphas} - Error: {min_error}")
 
 def model_gradientboost():
     df = prepare_data_y11()
@@ -139,12 +158,25 @@ def model_badgb():
     train(df, estimator, gradient_boosting_params, "bad_gradientboost", True)
 
 def model_svc():
-    df = prepare_data_y11()
+    alpha_values = np.linspace(0.25, 0.75, num=2)  # Generate 11 values between 0 and 1
+    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
+
     param_grid = {'C': [0.1, 1, 10],
-              'gamma': [1, 0.1, 0.01, 0.001, 'scale'], 
-              'kernel': ['linear', 'rbf', 'poly', 'sigmoid']}
+                  'gamma': [1, 0.1, 0.01, 0.001], 
+                  'kernel': ['linear', 'rbf', 'poly', 'sigmoid']}
     svc = SVC(probability=True, random_state=42)
-    train(df, svc, param_grid, "svc", False)
+    min_error = float('inf')
+    best_alphas = None
+    for alphas in alpha_combinations:
+        alpha1, alpha2, alpha3, alpha4 = alphas
+        df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4.item())
+        print(f"Testing with alphas: {alphas}")
+        error = train(df, svc, param_grid, f"svc_alpha_{alpha1.item()}_{alpha2.item()}_{alpha3.item()}_{alpha4.item()}", False)
+        if error < min_error:
+            min_error = error
+            best_alphas = alphas
+            print (f"New best error: {min_error} with alphas: {best_alphas}")
+    print(f"Best alphas: {best_alphas}")
 
 def model_adaboost():
     df = prepare_data_y11()
