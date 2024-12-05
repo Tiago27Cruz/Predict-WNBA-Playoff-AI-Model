@@ -135,51 +135,6 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return players_teams_df
 
-def cpps_y11(players_teams_df: pd.DataFrame, players_teams_y11) -> pd.DataFrame:
-    """
-    Using exponential moving average, calculate the previous stats of the players.
-    Replaces the stats columns with the previous stats.
-    """
-
-    stats = [
-        "GP","GS","minutes","points","oRebounds","dRebounds",
-        "rebounds","assists","steals","blocks","turnovers","PF",
-        "fgAttempted","fgMade","ftAttempted","ftMade","threeAttempted",
-        "threeMade","dq", "Award Count", # Non Post stats
-        "PostGP","PostGS","PostMinutes","PostPoints","PostoRebounds",
-        "PostdRebounds","PostRebounds","PostAssists","PostSteals",
-        "PostBlocks","PostTurnovers","PostPF","PostfgAttempted",
-        "PostfgMade","PostftAttempted","PostftMade",
-        "PostthreeAttempted","PostthreeMade","PostDQ", # Post stats
-        "PostthreeRatio", "PostfgRatio", "PostftRatio", "ThreeRatio", "fgRatio", "ftRatio"
-    ]
-
-    stats = [stat for stat in stats if stat in players_teams_df]
-
-    for stat in stats:
-        
-        if stat[:4] == "Post":
-            if stat not in ["PostMinutes", "PostGS", "PostGP"]:
-                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["PostMinutes"] / players_teams_df["PostGP"]
-        else:
-            if stat not in ["minutes", "Award Count", "GP", "GS"]:
-                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["minutes"] / players_teams_df["GP"]
-        
-        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
-        players_teams_df[stat] = (
-            players_teams_df
-            .sort_values('year')
-            .groupby(by=['playerID'])[stat]
-            .apply(lambda x: x.ewm(alpha=0.6, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
-            .reset_index(level=0, drop=True)
-        )
-
-    players_teams_df = pd.concat([players_teams_df, players_teams_y11], ignore_index=True, sort=False)
-    players_teams_df[stats] = players_teams_df.groupby('playerID')[stats].shift(periods=1)
-    #players_teams_df = players_teams_df.dropna()
-    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
-    return players_teams_df
-
 def bad_calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
     """
     Using exponential moving average, calculate the previous stats of the players.
@@ -270,31 +225,6 @@ def calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
     #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
     return coaches_df
 
-def ccps_y11(coaches_df: pd.DataFrame, coaches_y11) -> pd.DataFrame:
-    """
-    Using exponential moving average, calculate the previous stats of the coaches.
-    Replaces the stats columns with the previous stats.
-    """
-
-    stats = [
-        "wr", "pwr"
-    ]
-
-    for stat in stats:
-        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
-        coaches_df[stat] = (
-            coaches_df
-            .sort_values('year')
-            .groupby(by=['coachID'])[stat]
-            .apply(lambda x: x.ewm(alpha=0.7, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
-            .reset_index(level=0, drop=True)
-        )
-    # TODO: change alpha
-    coaches_df = pd.concat([coaches_df, coaches_y11], ignore_index=True, sort=False)
-    coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
-    #coaches_df = coaches_df.dropna()
-    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
-    return coaches_df
 
 def bad_calculate_coach_prev_stats(coaches_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -353,4 +283,115 @@ def bad_calculate_team_coaches_average(teams_df: pd.DataFrame, coaches_df: pd.Da
 
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
+    return teams_df
+
+# Y11
+
+def ccps_y11(coaches_df: pd.DataFrame, coaches_y11, alpha) -> pd.DataFrame:
+    """
+    Using exponential moving average, calculate the previous stats of the coaches.
+    Replaces the stats columns with the previous stats.
+    """
+
+    stats = [
+        "wr", "pwr"
+    ]
+
+    for stat in stats:
+        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+        coaches_df[stat] = (
+            coaches_df
+            .sort_values(['year','stint'])
+            .groupby(by=['coachID'])[stat]
+            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .reset_index(level=0, drop=True)
+        )
+    # TODO: change alpha
+    coaches_df = pd.concat([coaches_df, coaches_y11], ignore_index=True, sort=False)
+    coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
+    #coaches_df = coaches_df.dropna()
+    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+    return coaches_df
+
+def cpps_y11(players_teams_df: pd.DataFrame, players_teams_y11, alpha) -> pd.DataFrame:
+    """
+    Using exponential moving average, calculate the previous stats of the players.
+    Replaces the stats columns with the previous stats.
+    """
+
+    stats = [
+        "GP","GS","minutes","points","oRebounds","dRebounds",
+        "rebounds","assists","steals","blocks","turnovers","PF",
+        "fgAttempted","fgMade","ftAttempted","ftMade","threeAttempted",
+        "threeMade","dq", "Award Count", # Non Post stats
+        "PostGP","PostGS","PostMinutes","PostPoints","PostoRebounds",
+        "PostdRebounds","PostRebounds","PostAssists","PostSteals",
+        "PostBlocks","PostTurnovers","PostPF","PostfgAttempted",
+        "PostfgMade","PostftAttempted","PostftMade",
+        "PostthreeAttempted","PostthreeMade","PostDQ", # Post stats
+        "PostthreeRatio", "PostfgRatio", "PostftRatio", "ThreeRatio", "fgRatio", "ftRatio"
+    ]
+
+    stats = [stat for stat in stats if stat in players_teams_df]
+
+    for stat in stats:
+        
+        if stat[:4] == "Post":
+            if stat not in ["PostMinutes", "PostGS", "PostGP"]:
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["PostMinutes"] / players_teams_df["PostGP"]
+        else:
+            if stat not in ["minutes", "Award Count", "GP", "GS"]:
+                players_teams_df[stat] = players_teams_df[stat] * players_teams_df["minutes"] / players_teams_df["GP"]
+        
+        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+        players_teams_df[stat] = (
+            players_teams_df
+            .sort_values(['year','stint'])
+            .groupby(by=['playerID'])[stat]
+            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .reset_index(level=0, drop=True)
+        )
+
+    players_teams_df = pd.concat([players_teams_df, players_teams_y11], ignore_index=True, sort=False)
+    players_teams_df[stats] = players_teams_df.groupby('playerID')[stats].shift(periods=1)
+    #players_teams_df = players_teams_df.dropna()
+    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+    return players_teams_df
+
+def cewm_y11(teams_df, teams_y11, alpha1, alpha2):
+    stats_list = [
+        "o_fgm","o_fga","o_ftm","o_fta","o_3pm","o_3pa",
+        "o_oreb","o_dreb","o_reb","o_asts","o_pf","o_stl","o_to",
+        "o_blk","o_pts","d_fgm","d_fga","d_ftm","d_fta","d_3pm",
+        "d_3pa","d_oreb","d_dreb","d_reb","d_asts","d_pf","d_stl",
+        "d_to","d_blk","d_pts"
+    ]
+
+    team_stats = teams_df[stats_list].copy()
+    team_stats[["tmID", "year"]] = teams_df[["tmID", "year"]]
+    team_stats["wr"] = teams_df["won"] / (teams_df["won"] + teams_df["lost"])
+
+    alpha = 0.085
+
+    for stat in stats_list:
+        team_stats[stat] = (
+            team_stats
+            .sort_values('year')
+            .groupby(by=['tmID'])[stat]
+            .apply(lambda x: x.ewm(alpha=alpha1, adjust=False).mean())
+            .reset_index(level=0, drop=True)
+        )
+        
+    team_stats["wr"] = (
+        team_stats
+        .sort_values('year')
+        .groupby(by=['tmID'])["wr"]
+        .apply(lambda x: x.ewm(alpha=alpha2, adjust=False).mean())
+        .reset_index(level=0, drop=True)
+    )
+
+    teams_df = pd.concat([teams_df, teams_y11], ignore_index=True, sort=False)
+    teams_df[stats_list] = team_stats.groupby('tmID')[stats_list].shift(periods=1)
+    teams_df["wr"] = team_stats.groupby('tmID')["wr"].shift(periods=1)
+
     return teams_df
