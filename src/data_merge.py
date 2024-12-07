@@ -124,7 +124,7 @@ def calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFrame:
         #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
         players_teams_df[stat] = (
             players_teams_df
-            .sort_values('year')
+            .sort_values(['year', 'stint'])
             .groupby(by=['playerID'])[stat]
             .apply(lambda x: x.ewm(alpha=0.6, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
             .reset_index(level=0, drop=True)
