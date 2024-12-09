@@ -106,7 +106,7 @@ def predict_error_scorer(y_test, y_pred):
     y_pred = softmax(y_pred)
     y_pred = [8*y for y in y_pred]
 
-    print(f"y_test shape: {len(y_test)}, y_pred shape: {len(y_pred)}")
+    #print(f"y_test shape: {len(y_test)}, y_pred shape: {len(y_pred)}")
     
     error = 0
     for i in range(len(y_pred)):

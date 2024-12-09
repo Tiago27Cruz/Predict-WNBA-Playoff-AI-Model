@@ -1,6 +1,7 @@
 from xgboost import XGBClassifier
 from data_prep import *
 from analysis import *
+from custom_split import *
 
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
@@ -17,6 +18,7 @@ from sklearn.neural_network import MLPClassifier
 from itertools import product
 
 from sklearn.metrics import make_scorer
+
 
 ### Utils for Models ###
 
@@ -69,19 +71,20 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     for year in range(11, 12):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
-        print("ytest len ", len(y_test), " xtest len ", len(X_test))
+        custom_cv = customSplit(df, usepca)
 
-        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring=scorer)
+        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring=scorer, cv=custom_cv)
         grid_search.fit(X_train, y_train)
         #print(grid_search.best_estimator_)
 
         # Predictions on training set
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
         y_pred = y_pred_full[:,1]
+        error = predict_error(y_pred, y_test, year)
         
         #errors.append(str(predict_error(y_pred, y_test, year)))
 
-        error = predict_error(y_pred, y_test, year)
+        
 
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
@@ -119,8 +122,11 @@ def model_xgboost():
     #df = prepare_data_y11()
     params = {
         'max_depth': [3, 5, 7],
-        'learning_rate': [0.1, 0.01, 0.001],
-        'subsample': [0.5, 0.7, 1]
+        'learning_rate': [0.5, 0.3, 0.1, 0.01],
+        'subsample': [0.7, 1],
+        'min_child_weight': [1, 5, 10],
+        'gamma': [0, 0.5, 1, 1.5, 2],
+        'colsample_bytree': [0.6, 0.8, 1]
     }
     estimator = XGBClassifier()
     min_error = float('inf')
