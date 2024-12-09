@@ -16,6 +16,8 @@ from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 from itertools import product
 
+from sklearn.metrics import make_scorer
+
 ### Utils for Models ###
 
 def my_custom_loss(ground_truth, predictions):
@@ -50,7 +52,7 @@ def custom_split(df, year, usepca):
     y_test = target_df["playoff"]
     if usepca:
         X_test = pca.transform(scaler.transform(X_test))
-        
+
     return X_train, y_train, X_test, y_test, filtered_df.drop(columns=["playoff"])
     
 
@@ -62,10 +64,14 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     feature_names.remove("year")
     feature_names.remove("playoff")
 
+    scorer = make_scorer(score_func=predict_error_scorer, greater_is_better=False, response_method="predict_proba")
+
     for year in range(11, 12):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
-        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        print("ytest len ", len(y_test), " xtest len ", len(X_test))
+
+        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring=scorer)
         grid_search.fit(X_train, y_train)
         #print(grid_search.best_estimator_)
 
@@ -107,27 +113,33 @@ def model_randomforest():
     train(df, estimator, param_grid, "randomforest", False)
 
 def model_xgboost():
-    alpha_values = np.linspace(0.2, 1, num=5)  # Generate 11 values between 0 and 1
+    alpha_values = np.linspace(0.8, 0.95, num=9)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
     #df = prepare_data_y11()
     params = {
-        #'max_depth': [3, 5, 7],
-        #'learning_rate': [0.1, 0.01, 0.001],
-        #'subsample': [0.5, 0.7, 1]
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.1, 0.01, 0.001],
+        'subsample': [0.5, 0.7, 1]
     }
     estimator = XGBClassifier()
     min_error = float('inf')
     best_alphas = None
     for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
-        df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4.item())
-        print(f"Testing with alphas: {alphas}")
-        error = train(df, estimator, params, f"xgboost_alpha_{alpha1.item()}_{alpha2.item()}_{alpha3.item()}_{alpha4.item()}", False)
+        alpha4 = alpha4.item() - 0.3
+        alphas = alpha1.item(), alpha2.item(), alpha3.item(), alpha4
+        #df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4)
+        df = prepare_data_y11(0.875, 0.81875, 0.931249, 0.59375)
+        #print(f"Testing with alphas: {alphas}")
+        error = train(df, estimator, params, f"xgboost_alpha_{alpha1.item()}_{alpha2.item()}_{alpha3.item()}_{alpha4}", False)
         if error < min_error:
             min_error = error
             best_alphas = alphas
-            print (f"New best error: {min_error} with alphas: {best_alphas}")
+            #print (f"New best error: {min_error} with alphas: {best_alphas}")
+
+
+        break
     print(f"Best alphas: {best_alphas} - Error: {min_error}")
 
 def model_gradientboost():
