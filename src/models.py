@@ -38,6 +38,7 @@ def custom_split(df, year, usepca):
     target_df = df[df["year"] == year].drop(columns=["year"])
 
     X_train = filtered_df.drop(columns=["playoff"])
+    #X_train.to_csv("X_train.csv")
     y_train = filtered_df["playoff"]
     cols = X_train.columns
 
@@ -55,6 +56,8 @@ def custom_split(df, year, usepca):
     if usepca:
         X_test = pca.transform(scaler.transform(X_test))
 
+    
+
     return X_train, y_train, X_test, y_test, filtered_df.drop(columns=["playoff"])
     
 
@@ -70,8 +73,8 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
     for year in range(11, 12):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
-
-        custom_cv = customSplit(df, usepca)
+        
+        custom_cv = customSplit(df[df["year"] < year], usepca)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring=scorer, cv=custom_cv)
         grid_search.fit(X_train, y_train)
@@ -128,7 +131,7 @@ def model_xgboost():
         'gamma': [0, 0.5, 1, 1.5, 2],
         'colsample_bytree': [0.6, 0.8, 1]
     }
-    estimator = XGBClassifier()
+    estimator = XGBClassifier(random_state=42)
     min_error = float('inf')
     best_alphas = None
     for alphas in alpha_combinations:

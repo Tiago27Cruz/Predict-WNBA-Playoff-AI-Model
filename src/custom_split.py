@@ -10,6 +10,7 @@ class customSplit(BaseCrossValidator):
 
     def split(self, X, y=None, groups=None):
         years = sorted(self.df['year'].unique())
+        print(years)
         for i in range(1, len(years)):
             train_years = years[:i]
             test_year = years[i]
@@ -36,8 +37,8 @@ class customSplit(BaseCrossValidator):
 
             train_idx = filtered_df.index
             test_idx = target_df.index
-
-            print(f"Train indices: {train_idx}, Test indices: {test_idx}")
+            print("train years: ", train_years)
+            print("test year: ", test_year)
 
             assert len(train_idx) == len(X_train), "Mismatch in training indices and X_train size."
             assert len(test_idx) == len(X_test), "Mismatch in test indices and X_test size."
