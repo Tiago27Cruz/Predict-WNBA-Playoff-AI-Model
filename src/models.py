@@ -122,14 +122,10 @@ def model_xgboost():
     best_alphas = None
     for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
-        alpha1 = 0.87
-        alpha2= 0.81625
-        alpha3= 0.93875
-        alpha4 = 0.6
-        #alpha1= alpha1.item()
-        #alpha2= alpha2.item()
-        #alpha3= alpha3.item()
-        #alpha4= alpha4.item()
+        alpha1= alpha1.item() + 0.06
+        alpha2= alpha2.item()
+        alpha3= alpha3.item() + 0.12
+        alpha4= alpha4.item() - 0.22
         alphas = alpha1, alpha2, alpha3, alpha4
 
         df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
