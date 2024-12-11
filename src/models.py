@@ -94,13 +94,15 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
 def model_xgboost2():
     params = {
-
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.1, 0.01, 0.001],
+        'subsample': [0.5, 0.7, 1]
     }
     error = 0
-    alpha1 = 0.8
-    alpha2= 0.4
-    alpha3= 0.8
-    alpha4 = 0.8
+    alpha1 = 0.8133333333333334
+    alpha2= 0.31666666666666665
+    alpha3= 0.8833333333333333
+    alpha4 =0.75
 
     maxRange = 1
     for i in range(0, maxRange):
@@ -110,7 +112,7 @@ def model_xgboost2():
     print(f"Error: {error/maxRange}")
 
 def model_xgboost():
-    alpha_values = np.linspace(0.4, 1, num=4)  # Generate 11 values between 0 and 1
+    alpha_values = np.linspace(0.78, 0.88, num=4)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
     #df = prepare_data_y11()
@@ -125,9 +127,9 @@ def model_xgboost():
     for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
         alpha1= alpha1.item()
-        alpha2= alpha2.item()
-        alpha3= alpha3.item()
-        alpha4= alpha4.item()
+        alpha2= alpha2.item() - 0.53
+        alpha3= alpha3.item() +0.07
+        alpha4= alpha4.item() - 0.13
         alphas = alpha1, alpha2, alpha3, alpha4
 
         df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)

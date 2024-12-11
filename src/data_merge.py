@@ -190,7 +190,7 @@ def remove_outliers_iqr(df, factor=1.5):
     #print(f"Number of values removed: {num_removed}")
     return filtered_df
 
-def calculate_mean_without_outliers(players_teams_df, stats, threshold=3):
+def calculate_mean_without_outliers(players_teams_df, stats, factor=1.5):
     # Group by tmID and year
     grouped = players_teams_df.groupby(by=["tmID", "year"])
 
@@ -202,7 +202,7 @@ def calculate_mean_without_outliers(players_teams_df, stats, threshold=3):
         #print(group)
         # Remove outliers
         #print("Team: ", name[0], "Year: ", name[1])
-        filtered_group = remove_outliers_iqr(group[stats], 1.39)
+        filtered_group = remove_outliers_iqr(group[stats], factor)
         
         # Calculate the mean of the filtered group
         mean_values = filtered_group.mean()
@@ -239,7 +239,7 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
     stats = [stat for stat in stats if stat in players_teams_df]
 
     #players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
-    mean_series = calculate_mean_without_outliers(players_teams_df, stats, 3)
+    mean_series = calculate_mean_without_outliers(players_teams_df, stats, 5)
     #mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
 
 
