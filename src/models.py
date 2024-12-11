@@ -108,7 +108,7 @@ def model_xgboost2():
     print(f"Error: {error/10}")
 
 def model_xgboost():
-    alpha_values = np.linspace(0.2, 1, num=5)  # Generate 11 values between 0 and 1
+    alpha_values = np.linspace(0.81, 0.82, num=9)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
     #df = prepare_data_y11()
