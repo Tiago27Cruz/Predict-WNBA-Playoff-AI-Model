@@ -10,7 +10,7 @@ def main():
 
     #model_randomforest()
     
-    model_xgboost()
+    model_xgboost2()
     #model_gradientboost()
     #model_gradientboost_nopca()
     #model_badgb()

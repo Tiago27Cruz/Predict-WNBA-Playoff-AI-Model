@@ -190,8 +190,19 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
 
     stats = [stat for stat in stats if stat in players_teams_df]
 
+    #players_teams_df["helper"] = players_teams_df["points"] + players_teams_df["assists"] + players_teams_df["rebounds"]
+
     #players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
+    players_teams_df = players_teams_df[players_teams_df["year"] > 1]
+
     mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
+    #mean_series = players_teams_df.loc[players_teams_df.groupby(by=["tmID", "year"])["helper"].idxmax()]
+
+    #to_keep = ["tmID", "year"]
+    #to_keep.extend(stats)
+    #mean_series = mean_series[to_keep]
+
+    #print(mean_series)
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
