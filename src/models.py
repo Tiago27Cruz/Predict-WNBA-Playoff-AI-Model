@@ -65,9 +65,9 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     for year in range(11, 12):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
-        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+        grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
-        #print(grid_search.best_estimator_)
+        #print(grid_search.best_estimator_) 
 
         # Predictions on training set
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
@@ -92,6 +92,57 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     return error
 
 
+def model_xgboost2():
+    params = {
+
+    }
+    error = 0
+    alpha1 = 0.87
+    alpha2= 0.81625
+    alpha3= 0.93875
+    alpha4 = 0.6
+    for i in range(0, 10):
+        estimator = XGBClassifier()
+        df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
+        error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
+    print(f"Error: {error/10}")
+
+def model_xgboost():
+    alpha_values = np.linspace(0.2, 1, num=5)  # Generate 11 values between 0 and 1
+    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
+
+    #df = prepare_data_y11()
+    params = {
+        #'max_depth': [3, 5, 7],
+        #'learning_rate': [0.1, 0.01, 0.001],
+        #'subsample': [0.5, 0.7, 1]
+    }
+    estimator = XGBClassifier(random_state=42)
+    min_error = float('inf')
+    best_alphas = None
+    for alphas in alpha_combinations:
+        alpha1, alpha2, alpha3, alpha4 = alphas
+        alpha1 = 0.87
+        alpha2= 0.81625
+        alpha3= 0.93875
+        alpha4 = 0.6
+        #alpha1= alpha1.item()
+        #alpha2= alpha2.item()
+        #alpha3= alpha3.item()
+        #alpha4= alpha4.item()
+        alphas = alpha1, alpha2, alpha3, alpha4
+
+        df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
+        print(f"Testing with alphas: {alphas}")
+        error = train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
+        if error < min_error:
+            min_error = error
+            best_alphas = alphas
+            print (f"New best error: {min_error} with alphas: {best_alphas}")
+
+        break
+    print(f"Best alphas: {best_alphas} - Error: {min_error}")
+
 def model_randomforest():
     df = prepare_data_y11()
 
@@ -105,30 +156,6 @@ def model_randomforest():
     estimator = RandomForestClassifier(random_state=42)
 
     train(df, estimator, param_grid, "randomforest", False)
-
-def model_xgboost():
-    alpha_values = np.linspace(0.2, 1, num=5)  # Generate 11 values between 0 and 1
-    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
-
-    #df = prepare_data_y11()
-    params = {
-        #'max_depth': [3, 5, 7],
-        #'learning_rate': [0.1, 0.01, 0.001],
-        #'subsample': [0.5, 0.7, 1]
-    }
-    estimator = XGBClassifier()
-    min_error = float('inf')
-    best_alphas = None
-    for alphas in alpha_combinations:
-        alpha1, alpha2, alpha3, alpha4 = alphas
-        df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4.item())
-        print(f"Testing with alphas: {alphas}")
-        error = train(df, estimator, params, f"xgboost_alpha_{alpha1.item()}_{alpha2.item()}_{alpha3.item()}_{alpha4.item()}", False)
-        if error < min_error:
-            min_error = error
-            best_alphas = alphas
-            print (f"New best error: {min_error} with alphas: {best_alphas}")
-    print(f"Best alphas: {best_alphas} - Error: {min_error}")
 
 def model_gradientboost():
     df = prepare_data_y11()
