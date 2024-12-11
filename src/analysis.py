@@ -91,6 +91,7 @@ def calculate_importances(name, rf, X, X_test, y_test):
 
 def predict_error(y_pred, y_test, year):
     #y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+    print(y_pred)
     y_pred = softmax(y_pred)
     y_pred = [8*y for y in y_pred]
     

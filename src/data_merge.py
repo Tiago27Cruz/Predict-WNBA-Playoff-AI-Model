@@ -1,5 +1,6 @@
 import pandas as pd
 from data_clean import *
+import numpy as np
 
 ### Data Merging Functions ###
 
@@ -171,6 +172,53 @@ def bad_calculate_player_prev_stats(players_teams_df: pd.DataFrame) -> pd.DataFr
 
     return players_teams_df
 
+def remove_outliers_zscore(df, threshold=3):
+    z_scores = np.abs((df - df.mean()) / df.std())
+    filtered_df = df[(z_scores < threshold).all(axis=1)]
+    num_removed = len(filtered_df)
+    print(f"Number of values: {num_removed}")
+    return filtered_df
+
+def remove_outliers_iqr(df, factor=1.5):
+    Q1 = df.quantile(0.25)
+    Q3 = df.quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - (factor * IQR)
+    upper_bound = Q3 + (factor * IQR)
+    filtered_df = df[~((df < lower_bound) | (df > upper_bound)).any(axis=1)]
+    #num_removed = len(df) - len(filtered_df)
+    #print(f"Number of values removed: {num_removed}")
+    return filtered_df
+
+def calculate_mean_without_outliers(players_teams_df, stats, threshold=3):
+    # Group by tmID and year
+    grouped = players_teams_df.groupby(by=["tmID", "year"])
+
+    # Initialize an empty DataFrame to store the results
+    mean_series_list = []
+
+    # Iterate over each group
+    for name, group in grouped:
+        #print(group)
+        # Remove outliers
+        #print("Team: ", name[0], "Year: ", name[1])
+        filtered_group = remove_outliers_iqr(group[stats], 1.39)
+        
+        # Calculate the mean of the filtered group
+        mean_values = filtered_group.mean()
+        
+        # Create a Series with the mean values and add tmID and year
+        mean_values["tmID"] = name[0]
+        mean_values["year"] = name[1]
+        
+        # Append the mean values to the result list
+        mean_series_list.append(mean_values)
+
+    # Concatenate the list of Series into a DataFrame
+    mean_series = pd.DataFrame(mean_series_list)
+
+    return mean_series
+
 def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate the average of the previous years' player stats that belong to the team and add it to the team row.
@@ -191,12 +239,14 @@ def calculate_team_players_average(teams_df: pd.DataFrame, players_teams_df: pd.
     stats = [stat for stat in stats if stat in players_teams_df]
 
     #players_teams_df = players_teams_df[players_teams_df["minutes"] > 20]
-    mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
+    mean_series = calculate_mean_without_outliers(players_teams_df, stats, 3)
+    #mean_series = players_teams_df.groupby(by=["tmID", "year"])[stats].mean()
+
+
     teams_df = teams_df.reset_index(drop=True)
     teams_df = teams_df.merge(mean_series, how="inner", on=["tmID", "year"], validate="1:1")
     teams_df = teams_df[teams_df["year"] > 1]
-    #teams_df.to_csv("wowe.csv")
-    #teams_df[stat] = teams_df[['tmID', "year"]].map(mean_series)
+
 
     return teams_df
 
@@ -298,19 +348,17 @@ def ccps_y11(coaches_df: pd.DataFrame, coaches_y11, alpha) -> pd.DataFrame:
     ]
 
     for stat in stats:
-        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+        
         coaches_df[stat] = (
             coaches_df
             .sort_values(['year','stint'])
             .groupby(by=['coachID'])[stat]
-            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean())
             .reset_index(level=0, drop=True)
         )
-    # TODO: change alpha
     coaches_df = pd.concat([coaches_df, coaches_y11], ignore_index=True, sort=False)
     coaches_df[stats] = coaches_df.groupby('coachID')[stats].shift(periods=1)
-    #coaches_df = coaches_df.dropna()
-    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+
     return coaches_df
 
 def cpps_y11(players_teams_df: pd.DataFrame, players_teams_y11, alpha) -> pd.DataFrame:
@@ -343,19 +391,18 @@ def cpps_y11(players_teams_df: pd.DataFrame, players_teams_y11, alpha) -> pd.Dat
             if stat not in ["minutes", "Award Count", "GP", "GS"]:
                 players_teams_df[stat] = players_teams_df[stat] * players_teams_df["minutes"] / players_teams_df["GP"]
         
-        #players_teams_df[stat] = players_teams_df.sort_values('year').groupby(by=['playerID'])[stat].expanding().mean().reset_index()[stat]
+        
         players_teams_df[stat] = (
             players_teams_df
             .sort_values(['year','stint'])
             .groupby(by=['playerID'])[stat]
-            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean()) # Alpha maior = mais peso para os valores mais recentes | Adjust faria os valores serem normalizados
+            .apply(lambda x: x.ewm(alpha=alpha, adjust=False).mean())
             .reset_index(level=0, drop=True)
         )
 
     players_teams_df = pd.concat([players_teams_df, players_teams_y11], ignore_index=True, sort=False)
     players_teams_df[stats] = players_teams_df.groupby('playerID')[stats].shift(periods=1)
-    #players_teams_df = players_teams_df.dropna()
-    #players_teams_df["year"] = players_teams_df["year"].apply(lambda x: x+1)
+
     return players_teams_df
 
 def cewm_y11(teams_df, teams_y11, alpha1, alpha2):

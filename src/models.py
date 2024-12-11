@@ -97,18 +97,20 @@ def model_xgboost2():
 
     }
     error = 0
-    alpha1 = 0.87
-    alpha2= 0.81625
-    alpha3= 0.93875
-    alpha4 = 0.6
-    for i in range(0, 10):
+    alpha1 = 0.8
+    alpha2= 0.4
+    alpha3= 0.8
+    alpha4 = 0.8
+
+    maxRange = 1
+    for i in range(0, maxRange):
         estimator = XGBClassifier()
         df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
         error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
-    print(f"Error: {error/10}")
+    print(f"Error: {error/maxRange}")
 
 def model_xgboost():
-    alpha_values = np.linspace(0.81, 0.82, num=9)  # Generate 11 values between 0 and 1
+    alpha_values = np.linspace(0.4, 1, num=4)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
     #df = prepare_data_y11()
@@ -122,10 +124,10 @@ def model_xgboost():
     best_alphas = None
     for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
-        alpha1= alpha1.item() + 0.06
+        alpha1= alpha1.item()
         alpha2= alpha2.item()
-        alpha3= alpha3.item() + 0.12
-        alpha4= alpha4.item() - 0.22
+        alpha3= alpha3.item()
+        alpha4= alpha4.item()
         alphas = alpha1, alpha2, alpha3, alpha4
 
         df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
@@ -136,7 +138,6 @@ def model_xgboost():
             best_alphas = alphas
             print (f"New best error: {min_error} with alphas: {best_alphas}")
 
-        break
     print(f"Best alphas: {best_alphas} - Error: {min_error}")
 
 def model_randomforest():
