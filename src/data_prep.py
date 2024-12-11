@@ -110,8 +110,6 @@ def prepare_data_y11(alpha1, alpha2, alphap, alphac, fillna = True) -> pd.DataFr
     ## Handle N/A Values if wanted
     ## TODO: Some other method of leading with N/A might give us better results (???) or only in some fields
     if (fillna): teams_df = teams_df.fillna(0)
-
-    teams_df.to_csv("wowe.csv", index=False)
     
     ## Needed for models
     teams_df = teams_df.drop(columns="tmID")
