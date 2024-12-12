@@ -95,20 +95,21 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     return error
 
 def objective(trial):
-    alpha1 = trial.suggest_float("alpha1", 0.8, 0.95)
-    alpha2 = trial.suggest_float("alpha2", 0.8, 0.95)
-    alpha3 = trial.suggest_float("alpha3", 0.8, 0.95)
-    alpha4 = trial.suggest_float("alpha4", 0.5, 0.7)
+    alpha1 = trial.suggest_float("alpha1", 0.7, 0.95)
+    alpha2 = trial.suggest_float("alpha2", 0.7, 0.95)
+    alpha3 = trial.suggest_float("alpha3", 0.7, 0.95)
+    alpha4 = trial.suggest_float("alpha4", 0.5, 0.8)
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
-    df = df[df["year"] <= 10].drop(columns="year")
-    target = df["playoff"]
-    data = df.drop(columns=["playoff"])
-    train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2)
+    train_x, train_y, valid_x, valid_y, unused = custom_split(df, 10, True)
+    #df = df[df["year"] <= 10].drop(columns="year")
+    #target = df["playoff"]
+    #data = df.drop(columns=["playoff"])
+    #train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2)
     classifier = XGBClassifier()
 
     param = {
         "verbosity": 0,
-        "objective": "binary:logistic",
+        # defines booster, gblinear for linear functions.
         # L2 regularization weight.
         "lambda": trial.suggest_float("lambda", 1e-8, 1.0, log=True),
         # L1 regularization weight.
@@ -120,7 +121,7 @@ def objective(trial):
     }
 
     # maximum depth of the tree, signifies complexity of the tree.
-    param["max_depth"] = trial.suggest_int("max_depth", 5, 6, step=1)
+    param["max_depth"] = trial.suggest_int("max_depth", 5, 7, step=1)
     # minimum child weight, larger the term more conservative the tree.
     param["min_child_weight"] = trial.suggest_int("min_child_weight", 1, 4)
     param["eta"] = trial.suggest_float("eta", 1e-8, 1.0, log=True)
@@ -138,12 +139,12 @@ def objective(trial):
 
 def model_xgboost3():
     #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
-    params = {'lambda': 0.06434642133114366, 'alpha': 0.008309080643872441, 'subsample': 0.8590908432772727, 'colsample_bytree': 0.8404723489884105, 'max_depth': 6, 'min_child_weight': 2, 'eta': 0.07415676190928584, 'gamma': 9.246890619343607e-07, 'grow_policy': 'lossguide'}
+    params = {'lambda': 0.0004251572156595384, 'alpha': 5.944798223915464e-06, 'subsample': 0.42258762769477665, 'colsample_bytree': 0.7898440855385952, 'max_depth': 7, 'min_child_weight': 3, 'eta': 0.41299836369477516, 'gamma': 2.8330081183670557e-08, 'grow_policy': 'depthwise'}
     error = 0
-    alpha1 = 0.8354116785181468
-    alpha2= 0.9064320730530895
-    alpha3= 0.884111890800693
-    alpha4 = 0.5488308300084679
+    alpha1 = 0.7295938912692722
+    alpha2= 0.7752917970638031
+    alpha3= 0.8381826102657789
+    alpha4 = 0.6621686119084961
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
     for i in range(0, 1):
         estimator = XGBClassifier()
@@ -153,7 +154,7 @@ def model_xgboost3():
 
 def model_xgboost2():
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=60, timeout=600)
+    study.optimize(objective, n_trials=80, timeout=800)
 
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")
