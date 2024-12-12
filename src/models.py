@@ -1,3 +1,5 @@
+import optuna
+import sklearn
 from xgboost import XGBClassifier
 from data_prep import *
 from analysis import *
@@ -15,6 +17,7 @@ from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 from itertools import product
+import xgboost as xgb
 
 ### Utils for Models ###
 
@@ -91,41 +94,113 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     #        f.write(f"{error}\n")
     return error
 
+def objective(trial):
+    alpha1 = trial.suggest_float("alpha1", 0.8, 0.95)
+    alpha2 = trial.suggest_float("alpha2", 0.8, 0.95)
+    alpha3 = trial.suggest_float("alpha3", 0.8, 0.95)
+    alpha4 = trial.suggest_float("alpha4", 0.5, 0.7)
+    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
+    df = df[df["year"] <= 10].drop(columns="year")
+    target = df["playoff"]
+    data = df.drop(columns=["playoff"])
+    train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2)
+    classifier = XGBClassifier()
+
+    param = {
+        "verbosity": 0,
+        "objective": "binary:logistic",
+        # L2 regularization weight.
+        "lambda": trial.suggest_float("lambda", 1e-8, 1.0, log=True),
+        # L1 regularization weight.
+        "alpha": trial.suggest_float("alpha", 1e-8, 1.0, log=True),
+        # sampling ratio for training data.
+        "subsample": trial.suggest_float("subsample", 0.8, 1.0),
+        # sampling according to each tree.
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.8, 1.0),
+    }
+
+    # maximum depth of the tree, signifies complexity of the tree.
+    param["max_depth"] = trial.suggest_int("max_depth", 5, 6, step=1)
+    # minimum child weight, larger the term more conservative the tree.
+    param["min_child_weight"] = trial.suggest_int("min_child_weight", 1, 4)
+    param["eta"] = trial.suggest_float("eta", 1e-8, 1.0, log=True)
+    # defines how selective algorithm is.
+    param["gamma"] = trial.suggest_float("gamma", 1e-8, 1.0, log=True)
+    param["grow_policy"] = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
+
+    classifier.set_params(**param)
+    classifier.fit(train_x, train_y)
+    y_pred_full = classifier.predict_proba(valid_x)
+    y_pred = y_pred_full[:,1]
+
+    accuracy = predict_error(y_pred, valid_y, 11)
+    return accuracy
+
+def model_xgboost3():
+    #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
+    params = {'lambda': [0.06434642133114366], 'alpha': [0.008309080643872441], 'subsample': [0.8590908432772727], 'colsample_bytree': [0.8404723489884105], 'max_depth': [6], 'min_child_weight': [2], 'eta': [0.07415676190928584], 'gamma': [9.246890619343607e-07], 'grow_policy': ['lossguide']}
+    error = 0
+    alpha1 = 0.8354116785181468
+    alpha2= 0.9064320730530895
+    alpha3= 0.884111890800693
+    alpha4 = 0.5488308300084679
+    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
+    for i in range(0, 1):
+        estimator = XGBClassifier()
+        estimator.set_params(**params)
+        error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
+    print(f"Error: {error}")
 
 def model_xgboost2():
-    params = {
+    study = optuna.create_study(direction="minimize")
+    study.optimize(objective, n_trials=60, timeout=600)
 
+    print("Number of finished trials: ", len(study.trials))
+    print("Best trial:")
+    trial = study.best_trial
+
+    print("  Value: {}".format(trial.value))
+    print("  Params: ")
+    for key, value in trial.params.items():
+        print("    {}: {}".format(key, value))
+
+
+    return
+    params = {
+'max_depth': [3, 5, 6],
+        'learning_rate': [0.5, 0.3, 0.1],
+        'subsample': [0.5, 0.7, 1]
     }
     error = 0
-    alpha1 = 0.87
-    alpha2= 0.81625
-    alpha3= 0.93875
-    alpha4 = 0.6
-    for i in range(0, 10):
+    alpha1 = 0.8
+    alpha2= 0.8
+    alpha3= 0.9
+    alpha4 = 0.5
+    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
+    for i in range(0, 1):
         estimator = XGBClassifier()
-        df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
         error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
-    print(f"Error: {error/10}")
+    print(f"Error: {error}")
 
 def model_xgboost():
-    alpha_values = np.linspace(0.81, 0.82, num=9)  # Generate 11 values between 0 and 1
+    alpha_values = np.linspace(0.80, 0.95, num=4)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
     #df = prepare_data_y11()
     params = {
-        #'max_depth': [3, 5, 7],
-        #'learning_rate': [0.1, 0.01, 0.001],
-        #'subsample': [0.5, 0.7, 1]
+        'max_depth': [3, 5, 6],
+        'learning_rate': [0.5, 0.3, 0.1],
+        'subsample': [0.5, 0.7, 1]
     }
     estimator = XGBClassifier(random_state=42)
     min_error = float('inf')
     best_alphas = None
     for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
-        alpha1= alpha1.item() + 0.06
+        alpha1= alpha1.item() 
         alpha2= alpha2.item()
-        alpha3= alpha3.item() + 0.12
-        alpha4= alpha4.item() - 0.22
+        alpha3= alpha3.item() 
+        alpha4= alpha4.item() - 0.3
         alphas = alpha1, alpha2, alpha3, alpha4
 
         df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
@@ -136,7 +211,6 @@ def model_xgboost():
             best_alphas = alphas
             print (f"New best error: {min_error} with alphas: {best_alphas}")
 
-        break
     print(f"Best alphas: {best_alphas} - Error: {min_error}")
 
 def model_randomforest():
