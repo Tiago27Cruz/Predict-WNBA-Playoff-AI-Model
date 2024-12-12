@@ -138,7 +138,7 @@ def objective(trial):
 
 def model_xgboost3():
     #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
-    params = {'lambda': [0.06434642133114366], 'alpha': [0.008309080643872441], 'subsample': [0.8590908432772727], 'colsample_bytree': [0.8404723489884105], 'max_depth': [6], 'min_child_weight': [2], 'eta': [0.07415676190928584], 'gamma': [9.246890619343607e-07], 'grow_policy': ['lossguide']}
+    params = {'lambda': 0.06434642133114366, 'alpha': 0.008309080643872441, 'subsample': 0.8590908432772727, 'colsample_bytree': 0.8404723489884105, 'max_depth': 6, 'min_child_weight': 2, 'eta': 0.07415676190928584, 'gamma': 9.246890619343607e-07, 'grow_policy': 'lossguide'}
     error = 0
     alpha1 = 0.8354116785181468
     alpha2= 0.9064320730530895
@@ -148,7 +148,7 @@ def model_xgboost3():
     for i in range(0, 1):
         estimator = XGBClassifier()
         estimator.set_params(**params)
-        error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
+        error += train(df, estimator, {}, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
     print(f"Error: {error}")
 
 def model_xgboost2():
