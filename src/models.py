@@ -33,7 +33,7 @@ def custom_split(df, year, usepca):
     """
         Split the data into training and test sets based on the year.
     """
-    filtered_df = df[df["year"] < year].drop(columns=["year"])
+    filtered_df = df[df["year"] < year].drop(columns=["year", "confID"])
     target_df = df[df["year"] == year].drop(columns=["year"])
 
     X_train = filtered_df.drop(columns=["playoff"])
@@ -49,8 +49,8 @@ def custom_split(df, year, usepca):
         sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
         #print(sorted_columns)
 
-    X_test = target_df.drop(columns=["playoff"])
-    y_test = target_df["playoff"]
+    X_test = target_df.drop(columns=["playoff", "confID"])
+    y_test = target_df.filter(items=["playoff", "confID"])
     if usepca:
         X_test = pca.transform(scaler.transform(X_test))
         
@@ -78,7 +78,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         
         #errors.append(str(predict_error(y_pred, y_test, year)))
 
-        error = predict_error(y_pred, y_test, year)
+        error = predict_error_2metric(y_pred, y_test)
 
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
@@ -95,38 +95,34 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     return error
 
 def objective(trial):
-    alpha1 = trial.suggest_float("alpha1", 0.7, 0.95)
-    alpha2 = trial.suggest_float("alpha2", 0.7, 0.95)
-    alpha3 = trial.suggest_float("alpha3", 0.7, 0.95)
-    alpha4 = trial.suggest_float("alpha4", 0.5, 0.8)
+    alpha1 = trial.suggest_float("alpha1", 0.6, 0.8)
+    alpha2 = trial.suggest_float("alpha2", 0.3, 0.6)
+    alpha3 = trial.suggest_float("alpha3", 0.6, 0.85)
+    alpha4 = trial.suggest_float("alpha4", 0.4, 0.6)
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
     train_x, train_y, valid_x, valid_y, unused = custom_split(df, 10, True)
-    #df = df[df["year"] <= 10].drop(columns="year")
-    #target = df["playoff"]
-    #data = df.drop(columns=["playoff"])
-    #train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2)
     classifier = XGBClassifier()
 
     param = {
         "verbosity": 0,
         # defines booster, gblinear for linear functions.
         # L2 regularization weight.
-        "lambda": trial.suggest_float("lambda", 1e-8, 1.0, log=True),
+        "lambda": trial.suggest_float("lambda", 1e-5, 10.0, log=True),
         # L1 regularization weight.
-        "alpha": trial.suggest_float("alpha", 1e-8, 1.0, log=True),
+        "alpha": trial.suggest_float("alpha", 1e-5, 10.0, log=True),
         # sampling ratio for training data.
-        "subsample": trial.suggest_float("subsample", 0.8, 1.0),
+        "subsample": trial.suggest_float("subsample", 0.5, 1.0),
         # sampling according to each tree.
-        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.8, 1.0),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
     }
 
     # maximum depth of the tree, signifies complexity of the tree.
-    param["max_depth"] = trial.suggest_int("max_depth", 5, 7, step=1)
+    param["max_depth"] = trial.suggest_int("max_depth", 3, 10, step=1)
     # minimum child weight, larger the term more conservative the tree.
-    param["min_child_weight"] = trial.suggest_int("min_child_weight", 1, 4)
-    param["eta"] = trial.suggest_float("eta", 1e-8, 1.0, log=True)
+    param["min_child_weight"] = trial.suggest_int("min_child_weight", 1, 10)
+    param["eta"] = trial.suggest_float("eta", 0.01, 0.3, log=True)
     # defines how selective algorithm is.
-    param["gamma"] = trial.suggest_float("gamma", 1e-8, 1.0, log=True)
+    param["gamma"] = trial.suggest_float("gamma", 1e-8, 10.0, log=True)
     param["grow_policy"] = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
 
     classifier.set_params(**param)
@@ -134,33 +130,46 @@ def objective(trial):
     y_pred_full = classifier.predict_proba(valid_x)
     y_pred = y_pred_full[:,1]
 
-    accuracy = predict_error(y_pred, valid_y, 11)
-    return accuracy
+    error1, error2 = predict_error_2metric(y_pred, valid_y)
+    return error1, error2
 
 def model_xgboost3():
     #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
-    params = {'lambda': 0.0004251572156595384, 'alpha': 5.944798223915464e-06, 'subsample': 0.42258762769477665, 'colsample_bytree': 0.7898440855385952, 'max_depth': 7, 'min_child_weight': 3, 'eta': 0.41299836369477516, 'gamma': 2.8330081183670557e-08, 'grow_policy': 'depthwise'}
+    params = {
+        'lambda': 1.0284319565383509e-05, 
+        'alpha': 0.0006495016740174358, 
+        'subsample': 0.7937310062282724, 
+        'colsample_bytree': 0.6783549507536533, 
+        'max_depth':  8,
+        'min_child_weight': 4, 
+        'eta': 0.2988693928937173, 
+        'gamma': 7.483102194755792e-07, 
+        'grow_policy': 'lossguide'
+        }
     error = 0
-    alpha1 = 0.7295938912692722
-    alpha2= 0.7752917970638031
-    alpha3= 0.8381826102657789
-    alpha4 = 0.6621686119084961
+    alpha1 = 0.6883203159337098
+    alpha2= 0.5103680574543243
+    alpha3= 0.7805356609978054
+    alpha4 = 0.5994197583866097
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
     for i in range(0, 1):
         estimator = XGBClassifier()
         estimator.set_params(**params)
-        error += train(df, estimator, {}, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
-    print(f"Error: {error}")
+        error1, error2 = train(df, estimator, {}, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
+        error+= error2
+    print(f"Error1: {error1}, error2: {error}")
 
 def model_xgboost2():
-    study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=80, timeout=800)
+    study = optuna.create_study(directions=["minimize", "minimize"])
+    study.optimize(objective, n_trials=3, timeout=800)
 
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")
-    trial = study.best_trial
+    trials = study.best_trials
+    trial = sorted(trials, key=lambda t: (t.values[0], t.values[1]))[0]
+    #print(trial.values[0])
 
-    print("  Value: {}".format(trial.value))
+    print("  Value: {} | {}".format(trial.values[0], trial.values[1]))
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))

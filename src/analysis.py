@@ -90,14 +90,52 @@ def calculate_importances(name, rf, X, X_test, y_test):
     plt.close()
 
 def predict_error(y_pred, y_test, year):
+    """
+        Calculate the error of the prediction based on the formula given by the teachers
+    """
     #y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
     y_pred = softmax(y_pred)
     y_pred = [8*y for y in y_pred]
-    #print(y_pred)
-    
+
+
     error = 0
     for i in range(len(y_pred)):
+        print(y_pred[i])
         error += abs(y_pred[i] - list(y_test)[i])
  
     #print(f"predicting year {year}: error was {error}")
     return error
+
+def predict_error_2metric(y_pred, y_test: pd.DataFrame):
+    """
+        Calculate the error of the prediction based on both formulas given by the teachers
+        Error1 represents the error using the formula using only 0 and 1
+        Error2 represents the error using the absolute difference using probabilities
+    """
+
+    y_pred = softmax(y_pred)
+    y_pred = [8*y for y in y_pred]
+
+    error1 = 0
+    y_test["pred"] = y_pred
+
+    groups = y_test.groupby("confID")
+    for conf, group in groups:
+        #print("Conference: ", conf)
+        # Sort by pred value
+        group = group.sort_values(by="pred", ascending=False)
+        #print(group)
+        for index, (idx, row) in enumerate(group.iterrows()):
+            #print("index: ", index, "row pred: ", row["pred"], "row playoff: ", row["playoff"])
+            if index < 4 and row["playoff"] == 0:
+                error1 += 1
+            elif index >= 4 and row["playoff"] == 1:
+                error1 += 1
+
+    error2= 0
+
+    for i in range(len(y_pred)):
+        error2 += abs(y_pred[i] - list(y_test["playoff"])[i])
+        
+    return error1, error2
+
