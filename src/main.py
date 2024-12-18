@@ -10,7 +10,7 @@ def main():
 
     #model_randomforest()
     
-    model_xgboost3()
+    #model_xgboost()
     #model_gradientboost()
     #model_gradientboost_nopca()
     #model_badgb()
@@ -18,7 +18,7 @@ def main():
     #model_adaboost()
     #model_knn()
     #model_decisiontree()
-    #model_mlp()
+    model_mlp()
 
     #global_model_rf() # Accuracy: 0.5454545
 

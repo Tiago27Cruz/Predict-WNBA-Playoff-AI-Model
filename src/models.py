@@ -65,7 +65,7 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
     feature_names.remove("year")
     feature_names.remove("playoff")
 
-    for year in range(11, 12):
+    for year in range(3, 11):
         X_train, y_train, X_test, y_test, X = custom_split(df, year, usepca)
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring="accuracy")
@@ -75,10 +75,9 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         # Predictions on training set
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
         y_pred = y_pred_full[:,1]
-        
-        #errors.append(str(predict_error(y_pred, y_test, year)))
 
-        error = predict_error_2metric(y_pred, y_test)
+        error = predict_error(y_pred, y_test, year)
+        errors.append(str(error))
 
         if name == "decisiontree":
             tree.plot_tree(grid_search.best_estimator_, feature_names=feature_names)
@@ -89,9 +88,9 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
         #plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
         #if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
-    #with open(f"results_{name}.txt", "w") as f:
-    #    for error in errors:
-    #        f.write(f"{error}\n")
+    with open(f"results_{name}.txt", "w") as f:
+        for error in errors:
+            f.write(f"{error}\n")
     return error
 
 def objective(trial):
@@ -198,14 +197,16 @@ def model_xgboost():
 
     #df = prepare_data_y11()
     params = {
-        'max_depth': [3, 5, 6],
-        'learning_rate': [0.5, 0.3, 0.1],
-        'subsample': [0.5, 0.7, 1]
+        'min_child_weight': [1, 5, 10],
+        'gamma': [0.1, 0.3, 0.5],
+        'max_depth': [5, 6, 7]
     }
     estimator = XGBClassifier(random_state=42)
     min_error = float('inf')
     best_alphas = None
-    for alphas in alpha_combinations:
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
+    train(df, estimator, params, "xbgoost", False, False)
+    '''for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
         alpha1= alpha1.item() 
         alpha2= alpha2.item()
@@ -221,10 +222,10 @@ def model_xgboost():
             best_alphas = alphas
             print (f"New best error: {min_error} with alphas: {best_alphas}")
 
-    print(f"Best alphas: {best_alphas} - Error: {min_error}")
+    print(f"Best alphas: {best_alphas} - Error: {min_error}")'''
 
 def model_randomforest():
-    df = prepare_data_y11()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
 
     param_grid = {
         'n_estimators': [100, 200, 500],
@@ -238,7 +239,7 @@ def model_randomforest():
     train(df, estimator, param_grid, "randomforest", False)
 
 def model_gradientboost():
-    df = prepare_data_y11()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     gradient_boosting_params = {
         'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
         'max_leaf_nodes': [20,30,40]
@@ -247,7 +248,7 @@ def model_gradientboost():
     train(df, estimator, gradient_boosting_params, "gradientboost", False)
 
 def model_gradientboost_nopca():
-    df = prepare_data()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     gradient_boosting_params = {
         'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1, 0.5],
         'max_leaf_nodes': [20,30,40]
@@ -265,6 +266,7 @@ def model_badgb():
     train(df, estimator, gradient_boosting_params, "bad_gradientboost", True)
 
 def model_svc():
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     alpha_values = np.linspace(0.25, 0.75, num=2)  # Generate 11 values between 0 and 1
     alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
 
@@ -274,7 +276,8 @@ def model_svc():
     svc = SVC(probability=True, random_state=42)
     min_error = float('inf')
     best_alphas = None
-    for alphas in alpha_combinations:
+    train(df, svc, param_grid, "svc", False)
+    '''for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
         df = prepare_data_y11(alpha1.item(), alpha2.item(), alpha3.item(), alpha4.item())
         print(f"Testing with alphas: {alphas}")
@@ -283,10 +286,10 @@ def model_svc():
             min_error = error
             best_alphas = alphas
             print (f"New best error: {min_error} with alphas: {best_alphas}")
-    print(f"Best alphas: {best_alphas}")
+    print(f"Best alphas: {best_alphas}")'''
 
 def model_adaboost():
-    df = prepare_data_y11()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     param_grid = {
         'n_estimators': [100, 200, 500],
         'learning_rate': [0.5,1,2,5],
@@ -296,7 +299,7 @@ def model_adaboost():
     train(df, estimator, param_grid, "adaboost")
 
 def model_knn():
-    df = prepare_data()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     param_grid = {
         'n_neighbors': list(range(1, 27)),
         'weights': ['uniform', 'distance'],
@@ -306,16 +309,16 @@ def model_knn():
     train(df, estimator, param_grid, "knn")
 
 def model_decisiontree():
-    df = prepare_data_y11()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     param_grid = { 'criterion':['gini','entropy'],'max_depth': np.arange(3, 15)}
     estimator = DecisionTreeClassifier(random_state=42)
     train(df, estimator, param_grid, "decisiontree")
 
 def model_mlp():
-    df = prepare_data_y11()
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     param_grid = {
-        'hidden_layer_sizes': [(50, 50, 50), (50,50,50,50,50)],
-        'max_iter': [800, 1000],
+        'hidden_layer_sizes': [(25, 25, 25)],
+        'max_iter': [400, 600],
         'activation': ['tanh', 'relu'],
         'solver': ['adam'],
         'alpha': [ 0.0001, 0.001],

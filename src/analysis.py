@@ -97,13 +97,11 @@ def predict_error(y_pred, y_test, year):
     y_pred = softmax(y_pred)
     y_pred = [8*y for y in y_pred]
 
-
     error = 0
     for i in range(len(y_pred)):
-        print(y_pred[i])
-        error += abs(y_pred[i] - list(y_test)[i])
+        error += abs(y_pred[i] - list(y_test["playoff"])[i])
  
-    #print(f"predicting year {year}: error was {error}")
+    print(f"predicting year {year}: error was {error}")
     return error
 
 def predict_error_2metric(y_pred, y_test: pd.DataFrame):
