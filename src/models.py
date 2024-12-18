@@ -50,7 +50,8 @@ def custom_split(df, year, usepca):
         #print(sorted_columns)
 
     X_test = target_df.drop(columns=["playoff", "confID"])
-    y_test = target_df.filter(items=["playoff", "confID"])
+    #y_test = target_df.filter(items=["playoff", "confID"])
+    y_test = target_df.filter(items=["playoff"])
     if usepca:
         X_test = pca.transform(scaler.transform(X_test))
         
@@ -84,8 +85,8 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
             plt.savefig(f"tree{year}", dpi=300)
             plt.close()
 
-        #calculate_curves(f"{name}/year{year}", y_test, y_pred)
-        #plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
+        calculate_curves(f"{name}/year{year}", y_test, y_pred)
+        plot_confusion_matrix(f"{name}/year{year}", y_test, y_pred_full)
         #if (importances): calculate_importances(f"{name}/year{year}", grid_search.best_estimator_, X, X_test, y_test)
 
     with open(f"results_{name}.txt", "w") as f:
@@ -133,7 +134,6 @@ def objective(trial):
     return error1, error2
 
 def model_xgboost3():
-    #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
     params = {
         'lambda': 1.0284319565383509e-05, 
         'alpha': 0.0006495016740174358, 
@@ -166,30 +166,11 @@ def model_xgboost2():
     print("Best trial:")
     trials = study.best_trials
     trial = sorted(trials, key=lambda t: (t.values[0], t.values[1]))[0]
-    #print(trial.values[0])
 
     print("  Value: {} | {}".format(trial.values[0], trial.values[1]))
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
-
-
-    return
-    params = {
-'max_depth': [3, 5, 6],
-        'learning_rate': [0.5, 0.3, 0.1],
-        'subsample': [0.5, 0.7, 1]
-    }
-    error = 0
-    alpha1 = 0.8
-    alpha2= 0.8
-    alpha3= 0.9
-    alpha4 = 0.5
-    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
-    for i in range(0, 1):
-        estimator = XGBClassifier()
-        error += train(df, estimator, params, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
-    print(f"Error: {error}")
 
 def model_xgboost():
     alpha_values = np.linspace(0.80, 0.95, num=4)  # Generate 11 values between 0 and 1
@@ -205,7 +186,7 @@ def model_xgboost():
     min_error = float('inf')
     best_alphas = None
     df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
-    train(df, estimator, params, "xbgoost", False, False)
+    train(df, estimator, params, "xgboost", True, False)
     '''for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
         alpha1= alpha1.item() 
