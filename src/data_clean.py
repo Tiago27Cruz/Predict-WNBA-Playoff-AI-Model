@@ -27,7 +27,7 @@ def drop_team_info(teams_df: pd.DataFrame) -> pd.DataFrame:
     columns = ["tmORB","tmDRB","tmTRB","opptmORB",
                 "opptmDRB","opptmTRB","won","lost","GP","homeW","homeL",
                 "awayW","awayL","confW","confL","min","attend", "lgID",
-                "franchID", "confID", "divID", "arena", "name", "rank",
+                "franchID", "divID", "arena", "name", "rank",
                 "firstRound", "semis", "finals", "seeded"]
     
     return teams_df.drop(columns=columns)
