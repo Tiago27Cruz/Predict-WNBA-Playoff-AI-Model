@@ -4,17 +4,21 @@ from models import *
 
 def main():
 
-    model_randomforest()
+    #model_randomforest()
     
     model_xgboost()
-    model_gradientboost()
+    #model_gradientboost()
+    
+    #model_svc()
+    #model_adaboost()
+    #model_knn()
+    #model_decisiontree()
+    #model_mlp()
+
+
     #model_gradientboost_nopca()
     #model_badgb()
-    model_svc()
-    model_adaboost()
-    model_knn()
-    model_decisiontree()
-    model_mlp()
+
 
 
 if __name__ == "__main__":
