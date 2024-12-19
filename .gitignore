@@ -77,6 +77,3 @@ cython_debug/
 *.tmp
 *.bak
 *.swp
-
-wewo.csv
-
