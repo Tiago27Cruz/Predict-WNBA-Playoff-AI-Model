@@ -16,4 +16,4 @@ def plot_results(models):
     plt.legend()
     plt.savefig("results.png", dpi=200)
 
-plot_results(["svc", "knn", "randomforest", "gradientboost", "adaboost", "mlp", "decisiontree", "xbgoost"])
+plot_results(["svc", "knn", "randomforest", "gradientboost", "adaboost", "mlp", "decisiontree", "xgboost"])

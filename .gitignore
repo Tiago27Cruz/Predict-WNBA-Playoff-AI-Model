@@ -78,7 +78,5 @@ cython_debug/
 *.bak
 *.swp
 
-results
-
 wewo.csv
 
