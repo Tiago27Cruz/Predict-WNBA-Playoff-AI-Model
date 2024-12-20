@@ -169,10 +169,9 @@ def model_xgboost2():
 
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")
-    trials = study.best_trials
-    trial = sorted(trials, key=lambda t: (t.values[0], t.values[1]))[0]
+    trial = study.best_trial
 
-    print("  Value: {} | {}".format(trial.values[0], trial.values[1]))
+    print("  Value: {}".format(trial.value))
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
