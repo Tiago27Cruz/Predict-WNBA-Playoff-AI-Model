@@ -12,6 +12,8 @@ import pandas as pd
 
 
 def plot_confusion_matrix(name, y_test, y_scores):
+    y_test = y_test["playoff"]
+
     confusion_matrix = metrics.confusion_matrix(y_test, np.argmax(y_scores, axis=1))
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [0, 1])
     cm_display.plot()
@@ -25,6 +27,8 @@ def calculate_curves(name, y_test, y_scores):
         Calculate ROC and Precision-Recall curves. Saves figures using the given name inside /results.
         Also prints the ROC AUC and F1 scores.
     """
+    y_test = y_test["playoff"]
+
     # ROC AUC + F1 score
     roc_auc = roc_auc_score(y_test, y_scores)
     #f1 = f1_score(y_test, y_scores)
