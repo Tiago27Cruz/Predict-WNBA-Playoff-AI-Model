@@ -4,7 +4,12 @@
 
 Install dependencies with run ``pip install -r requirements.txt``
 Inside /src folder, run ``python main.py``
+Inside /src folder, run the notebook ``analysis.ipynb``
 
 ## Use Different Models
 
 Inside ``main.py`` there are different models. In order to run a different one other than the pre-selected XGBoost, simply uncomment the line.
+
+## Notebook
+
+Inside ``analysis.ipynb`` we perform various data exploration techniques such as pairplots and correlation matrixes in order to verify the validity of our data
