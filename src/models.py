@@ -33,7 +33,9 @@ def custom_split(df, year, usepca):
     """
         Split the data into training and test sets based on the year.
     """
-    filtered_df = df[df["year"] < year].drop(columns=["year", "confID"])
+    if year == 11: filtered_df = df[df["year"] < year].drop(columns=["year", "confID", "tmID"])
+    else: filtered_df = df[df["year"] < year].drop(columns=["year", "confID"])
+
     target_df = df[df["year"] == year].drop(columns=["year"])
 
     X_train = filtered_df.drop(columns=["playoff"])
@@ -46,12 +48,15 @@ def custom_split(df, year, usepca):
         X_train = pca.fit_transform(scaler.fit_transform(X_train))
 
         pcas = pd.DataFrame(pca.components_,columns=cols)
-        sorted_columns = pcas.apply(lambda row: [col for col, _ in sorted(row.items(), key=lambda x: x[1])][:4], axis=1)
-        #print(sorted_columns)
+    
+    # Year 11 doesn't have the playoff column
+    if(year == 11):
+        X_test = target_df.drop(columns=["confID", "tmID"])
+        y_test = target_df.filter(items=["confID", "tmID"])
+    else:
+        X_test = target_df.drop(columns=["playoff", "confID"])
+        y_test = target_df.filter(items=["playoff", "confID"])
 
-    X_test = target_df.drop(columns=["playoff", "confID"])
-    #y_test = target_df.filter(items=["playoff", "confID"])
-    y_test = target_df.filter(items=["playoff"])
     if usepca:
         X_test = pca.transform(scaler.transform(X_test))
         
@@ -71,7 +76,6 @@ def train(df: pd.DataFrame, estimator: any, param_grid: dict, name: str, importa
 
         grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=param_grid, n_jobs=-1, scoring="accuracy")
         grid_search.fit(X_train, y_train)
-        #print(grid_search.best_estimator_) 
 
         # Predictions on training set
         y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
@@ -99,12 +103,16 @@ def objective(trial):
     alpha2 = trial.suggest_float("alpha2", 0.8, 0.97)
     alpha3 = trial.suggest_float("alpha3", 0.8, 0.97)
     alpha4 = trial.suggest_float("alpha4", 0.5, 0.75)
+
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
     #train_x, train_y, valid_x, valid_y, unused = custom_split(df, 10, True)
+
     df = df[df["year"] <= 10].drop(columns="year")
     target = df["playoff"]
     data = df.drop(columns=["playoff"])
+
     train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2, stratify=target)
+
     classifier = XGBClassifier()
 
     param = {
@@ -136,23 +144,36 @@ def objective(trial):
     error1, error2 = predict_error_2metric(y_pred, valid_y)
     return error1, error2
 
-def model_xgboost3():
-    #params = {'booster': ['dart'], 'lambda': [9.84257228779875e-07], 'alpha': [8.128298214883622e-05], 'subsample': [0.6279857279334136], 'colsample_bytree': [0.8971479330260403], 'max_depth': [3], 'min_child_weight': [2], 'eta': [0.4757144466322099], 'gamma': [0.235090283639109], 'grow_policy': ['lossguide'], 'sample_type': ['weighted'], 'normalize_type': ['forest'], 'rate_drop': [0.009768351866172099], 'skip_drop': [0.0008229338053050406]}
-    params = {'lambda': 4.789447948189175e-07, 'alpha': 5.917773858702537e-08, 'max_depth': 5, 'min_child_weight': 2, 'eta': 0.2353935522417914, 'gamma': 0.00027391060978191527}
-    error = 0
-    alpha1 = 0.8178930575309684
-    alpha2= 0.8957139155243756
-    alpha3= 0.823118808259113
-    alpha4 = 0.5439571944325344
-    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
-    for i in range(0, 1):
-        estimator = XGBClassifier()
-        estimator.set_params(**params)
-        error1, error2 = train(df, estimator, {}, f"xgboost_alpha_{alpha1}_{alpha2}_{alpha3}_{alpha4}", False)
-        error+= error2
-    print(f"Error1: {error1}, error2: {error}")
+def model_xgboost_year11():
+    params = {
+        'min_child_weight': [1, 5, 10],
+        'gamma': [0.1, 0.3, 0.5],
+        'max_depth': [5, 6, 7]
+    }
+    estimator = XGBClassifier(random_state=42)
+    
+    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6, True, True)
+
+    estimator = XGBClassifier()
+    estimator.set_params(**params)
+
+    X_train, y_train, X_test, y_test, X = custom_split(df, 11, False)
+
+    grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=params, n_jobs=-1, scoring="accuracy")
+    grid_search.fit(X_train, y_train)
+
+    # Predictions on training set
+    y_pred_full = grid_search.best_estimator_.predict_proba(X_test)
+    y_pred = y_pred_full[:,1]
+
+    predict_y11(y_pred, y_test)
+
 
 def model_xgboost2():
+    """
+        XGBoost model using optuna (Competition Day 4)
+    """
+
     study = optuna.create_study(directions=["minimize", "minimize"])
     study.optimize(objective, n_trials=3, timeout=800)
 
@@ -167,21 +188,26 @@ def model_xgboost2():
         print("    {}: {}".format(key, value))
 
 def model_xgboost():
-    alpha_values = np.linspace(0.80, 0.95, num=4)  # Generate 11 values between 0 and 1
-    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
-
-    #df = prepare_data_y11()
+    
     params = {
         'min_child_weight': [1, 5, 10],
         'gamma': [0.1, 0.3, 0.5],
         'max_depth': [5, 6, 7]
     }
     estimator = XGBClassifier(random_state=42)
-    min_error = float('inf')
-    best_alphas = None
+    
     df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)
     train(df, estimator, params, "xgboost", True, False)
-    '''for alphas in alpha_combinations:
+
+    ''' Code used in Day 2 of the competition
+
+    alpha_values = np.linspace(0.80, 0.95, num=4)  # Generate 11 values between 0 and 1
+    alpha_combinations = list(product(alpha_values, repeat=4))  # Generate all combinations of 4 alphas
+    
+    min_error = float('inf')
+    best_alphas = None
+
+    for alphas in alpha_combinations:
         alpha1, alpha2, alpha3, alpha4 = alphas
         alpha1= alpha1.item() 
         alpha2= alpha2.item()
@@ -197,7 +223,8 @@ def model_xgboost():
             best_alphas = alphas
             print (f"New best error: {min_error} with alphas: {best_alphas}")
 
-    print(f"Best alphas: {best_alphas} - Error: {min_error}")'''
+    print(f"Best alphas: {best_alphas} - Error: {min_error}")
+    '''
 
 def model_randomforest():
     df = prepare_data_y11(0.9, 0.8, 0.8, 0.6)

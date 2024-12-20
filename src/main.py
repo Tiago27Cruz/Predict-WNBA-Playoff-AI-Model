@@ -6,7 +6,8 @@ def main():
 
     #model_randomforest()
     
-    model_xgboost()
+    #model_xgboost()
+    model_xgboost_year11()
     #model_gradientboost()
     
     #model_svc()

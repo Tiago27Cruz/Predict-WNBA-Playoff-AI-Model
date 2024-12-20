@@ -77,7 +77,11 @@ def prepare_data(fillna = True) -> pd.DataFrame:
 
     return teams_df
 
-def prepare_data_y11(alpha1, alpha2, alphap, alphac, fillna = True) -> pd.DataFrame:
+def prepare_data_y11(alpha1, alpha2, alphap, alphac, fillna = True, keepTeamId=False) -> pd.DataFrame:
+    """
+        Improved version of the prepare_data function for the Competition
+        Adds the data of year 11 and new hyperparameters
+    """
     teams_df = pd.read_csv("../data/teams.csv")
     awards_df = pd.read_csv("../data/awards_players.csv")
     players_teams_df = pd.read_csv("../data/players_teams.csv")
@@ -107,17 +111,21 @@ def prepare_data_y11(alpha1, alpha2, alphap, alphac, fillna = True) -> pd.DataFr
     # Others
     ## Handle useless rows
     teams_df = teams_df[teams_df["year"] > 1]
-    ## Handle N/A Values if wanted
-    ## TODO: Some other method of leading with N/A might give us better results (???) or only in some fields
+    
+    ## Handle N/A Values
     if (fillna): teams_df = teams_df.fillna(0)
     
     ## Needed for models
-    teams_df = teams_df.drop(columns="tmID")
+    if(not keepTeamId): teams_df = teams_df.drop(columns="tmID")
+    
     teams_df['playoff'] = teams_df['playoff'].map({'N':0,'Y':1})
     
     return teams_df
 
 def prepare_bad_data():
+    """
+        Prepare data version for a baseline model
+    """
     teams_df = pd.read_csv("../data/teams.csv")
     awards_df = pd.read_csv("../data/awards_players.csv")
     players_teams_df = pd.read_csv("../data/players_teams.csv")

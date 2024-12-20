@@ -118,12 +118,12 @@ def predict_error_2metric(y_pred, y_test: pd.DataFrame):
 
     groups = y_test.groupby("confID")
     for conf, group in groups:
-        #print("Conference: ", conf)
+        
         # Sort by pred value
         group = group.sort_values(by="pred", ascending=False)
-        #print(group)
+        
         for index, (idx, row) in enumerate(group.iterrows()):
-            #print("index: ", index, "row pred: ", row["pred"], "row playoff: ", row["playoff"])
+                          
             if index < 4 and row["playoff"] == 0:
                 error1 += 1
             elif index >= 4 and row["playoff"] == 1:
@@ -136,3 +136,25 @@ def predict_error_2metric(y_pred, y_test: pd.DataFrame):
         
     return error1, error2
 
+def predict_y11(y_pred, y_test):
+    """
+        Predict the y11 value using the formula given by the teachers
+    """
+    y_pred = softmax(y_pred)
+    y_pred = [8*y for y in y_pred]
+
+    error1 = 0
+    y_test["pred"] = y_pred
+
+    groups = y_test.groupby("confID")
+    for conf, group in groups:
+        
+        # Sort by pred value
+        group = group.sort_values(by="pred", ascending=False)
+        
+        for index, (idx, row) in enumerate(group.iterrows()):
+                          
+            if index < 4 == 0:
+                print("Team: ", row["tmId"], " | Pred: ", row["pred"], " | Playoff: True")
+            elif index >= 4 and row["playoff"] == 1:
+                print("Team: ", row["tmId"], " | Pred: ", row["pred"], " | Playoff: False")
