@@ -2,6 +2,7 @@
 
 ## How To Run
 
+Install dependencies with run ``pip install -r requirements.txt``
 Inside /src folder, run ``python main.py``
 
 ## Use Different Models
