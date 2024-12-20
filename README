@@ -12,4 +12,4 @@ Inside ``main.py`` there are different models. In order to run a different one o
 
 ## Notebook
 
-Inside ``analysis.ipynb`` we perform various data exploration techniques such as pairplots and correlation matrixes in order to verify the validity of our data
+Inside ``analysis.ipynb`` we perform various data exploration techniques such as pairplots and correlation matrixes in order to analyse and verify the validity of our data.
