@@ -1,0 +1,9 @@
+# AI Model to Predict which teams will make it to WNBA Playoffs
+
+## How To Run
+
+Inside /src folder, run ``python main.py``
+
+## Use Different Models
+
+Inside ``main.py`` there are different models. In order to run a different one other than the pre-selected XGBoost, simply uncomment the line.
