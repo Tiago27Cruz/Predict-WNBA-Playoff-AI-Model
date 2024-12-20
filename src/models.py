@@ -51,8 +51,8 @@ def custom_split(df, year, usepca):
     
     # Year 11 doesn't have the playoff column
     if(year == 11):
-        X_test = target_df.drop(columns=["confID", "tmID"])
-        y_test = target_df.filter(items=["confID", "tmID"])
+        X_test = target_df.drop(columns=["confID", "tmID", "playoff"])
+        y_test = target_df.filter(items=["confID", "tmID", "playoff"])
     else:
         X_test = target_df.drop(columns=["playoff", "confID"])
         y_test = target_df.filter(items=["playoff", "confID"])

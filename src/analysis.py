@@ -154,7 +154,7 @@ def predict_y11(y_pred, y_test):
         
         for index, (idx, row) in enumerate(group.iterrows()):
                           
-            if index < 4 == 0:
-                print("Team: ", row["tmId"], " | Pred: ", row["pred"], " | Playoff: True")
-            elif index >= 4 and row["playoff"] == 1:
-                print("Team: ", row["tmId"], " | Pred: ", row["pred"], " | Playoff: False")
+            if index < 4:
+                print("Team: ", row["tmID"], " | Pred: ", row["pred"], " | Playoff: True")
+            elif index >= 4:
+                print("Team: ", row["tmID"], " | Pred: ", row["pred"], " | Playoff: False")
