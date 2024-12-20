@@ -145,21 +145,21 @@ def objective(trial):
     return error1, error2
 
 def model_xgboost_year11():
-    params = {
-        'min_child_weight': [1, 5, 10],
-        'gamma': [0.1, 0.3, 0.5],
-        'max_depth': [5, 6, 7]
-    }
+    params = {'lambda': 4.789447948189175e-07, 'alpha': 5.917773858702537e-08, 'max_depth': 5, 'min_child_weight': 2, 'eta': 0.2353935522417914, 'gamma': 0.00027391060978191527}
+    alpha1 = 0.8178930575309684
+    alpha2= 0.8957139155243756
+    alpha3= 0.823118808259113
+    alpha4 = 0.5439571944325344
     estimator = XGBClassifier(random_state=42)
     
-    df = prepare_data_y11(0.9, 0.8, 0.8, 0.6, True, True)
+    df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4, True, True)
 
     estimator = XGBClassifier()
     estimator.set_params(**params)
 
     X_train, y_train, X_test, y_test, X = custom_split(df, 11, False)
 
-    grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid=params, n_jobs=-1, scoring="accuracy")
+    grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid={}, n_jobs=-1, scoring="accuracy")
     grid_search.fit(X_train, y_train)
 
     # Predictions on training set
