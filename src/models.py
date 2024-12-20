@@ -157,7 +157,7 @@ def model_xgboost_year11():
     estimator = XGBClassifier()
     estimator.set_params(**params)
 
-    X_train, y_train, X_test, y_test, X = custom_split(df, 11, False)
+    X_train, y_train, X_test, y_test, X = custom_split(df, 11, True)
 
     grid_search = GridSearchCV(estimator=estimator, refit=True, verbose=False, param_grid={}, n_jobs=-1, scoring="accuracy")
     grid_search.fit(X_train, y_train)
