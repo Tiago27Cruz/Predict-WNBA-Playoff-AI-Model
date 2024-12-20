@@ -89,6 +89,20 @@ def calculate_importances(name, rf, X, X_test, y_test):
     plt.savefig(f"../results/{name}_importances2.png")
     plt.close()
 
+def predict_error_simple(y_pred, y_test, year):
+    """
+        Calculate the error of the prediction based on the formula given by the teachers
+    """
+    #y_pred = list(map(lambda x: 8*x/y_pred_sum, y_pred))
+    y_pred = softmax(y_pred)
+    y_pred = [8*y for y in y_pred]
+    error = 0
+    for i in range(len(y_pred)):
+        error += abs(y_pred[i] - list(y_test)[i])
+ 
+    print(f"predicting year {year}: error was {error}")
+    return error
+
 def predict_error(y_pred, y_test, year):
     """
         Calculate the error of the prediction based on the formula given by the teachers

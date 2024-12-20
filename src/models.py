@@ -103,33 +103,23 @@ def objective(trial):
     alpha2 = trial.suggest_float("alpha2", 0.8, 0.97)
     alpha3 = trial.suggest_float("alpha3", 0.8, 0.97)
     alpha4 = trial.suggest_float("alpha4", 0.5, 0.75)
-
     df = prepare_data_y11(alpha1, alpha2, alpha3, alpha4)
-    #train_x, train_y, valid_x, valid_y, unused = custom_split(df, 10, True)
-
-    df = df[df["year"] <= 10].drop(columns="year")
+    df = df[df["year"] <= 10].drop(columns=["year", "confID"])
     target = df["playoff"]
     data = df.drop(columns=["playoff"])
-
     train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.2, stratify=target)
-
     classifier = XGBClassifier()
 
     param = {
         "verbosity": 0,
-        # defines booster, gblinear for linear functions.
         # L2 regularization weight.
-        "lambda": trial.suggest_float("lambda", 1e-5, 10.0, log=True),
+        "lambda": trial.suggest_float("lambda", 1e-8, 1.0, log=True),
         # L1 regularization weight.
-        "alpha": trial.suggest_float("alpha", 1e-5, 10.0, log=True),
-        # sampling ratio for training data.
-        #"subsample": trial.suggest_float("subsample", 0.85, 1.0),
-        # sampling according to each tree.
-        #"colsample_bytree": trial.suggest_float("colsample_bytree", 0.85, 1.0),
+        "alpha": trial.suggest_float("alpha", 1e-8, 1.0, log=True),
     }
 
     # maximum depth of the tree, signifies complexity of the tree.
-    param["max_depth"] = trial.suggest_int("max_depth", 3, 10, step=1)
+    param["max_depth"] = trial.suggest_int("max_depth", 5, 7, step=1)
     # minimum child weight, larger the term more conservative the tree.
     param["min_child_weight"] = trial.suggest_int("min_child_weight", 1, 4)
     param["eta"] = trial.suggest_float("eta", 0.2, 0.4)
@@ -141,8 +131,8 @@ def objective(trial):
     y_pred_full = classifier.predict_proba(valid_x)
     y_pred = y_pred_full[:,1]
 
-    error1, error2 = predict_error_2metric(y_pred, valid_y)
-    return error1, error2
+    accuracy = predict_error_simple(y_pred, valid_y, 11)
+    return accuracy
 
 def model_xgboost_year11():
     params = {'lambda': 4.789447948189175e-07, 'alpha': 5.917773858702537e-08, 'max_depth': 5, 'min_child_weight': 2, 'eta': 0.2353935522417914, 'gamma': 0.00027391060978191527}
@@ -174,8 +164,8 @@ def model_xgboost2():
         XGBoost model using optuna (Competition Day 4)
     """
 
-    study = optuna.create_study(directions=["minimize", "minimize"])
-    study.optimize(objective, n_trials=3, timeout=800)
+    study = optuna.create_study(direction="minimize")
+    study.optimize(objective, n_trials=60, timeout=800)
 
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")
